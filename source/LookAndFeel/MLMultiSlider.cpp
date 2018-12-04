@@ -10,19 +10,17 @@
 const int kWheelTimeoutDuration = 250;
 
 MLMultiSlider::MLMultiSlider (MLWidget* pContainer) :
-	MLWidget(pContainer),
-	mVertical(true),
-	isMouseWheelMoving(false),
-	mGestureInProgress(false)
+MLWidget(pContainer),
+mVertical(true),
+isMouseWheelMoving(false),
+mGestureInProgress(false)
 {
-	mpTimer = std::unique_ptr<GestureTimer>(new GestureTimer(this));
-	
 	MLWidget::setComponent(this);
 	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
 	setOpaque(myLookAndFeel->getDefaultOpacity());
 	setBufferedToImage(myLookAndFeel->getDefaultBufferMode());
 	setPaintingIsUnclipped(myLookAndFeel->getDefaultUnclippedMode());
-
+	
 	setNumSliders(1);
 	setRange(0., 1., 0.01);
 	mSliderUnderMouse = -1;
@@ -68,12 +66,12 @@ void MLMultiSlider::setFillColor (const Colour& c)
 {
 	float g = c.getFloatGreen();
 	float b = (1.f - g);	
-
+	
 	// thumb fill
 	setColour(fillColor, c);
 	// bright line
 	setColour(indicatorColor, Colour(c.getHue(), jmax(c.getSaturation() - (b*0.05), 0.), jmin((c.getBrightness() + b*2.f), 1.f), 1.f));
-
+	
 	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
 	// track background plain
 	setColour(trackEmptyDarkColor, myLookAndFeel->findColour(MLLookAndFeel::darkestFillColor));
@@ -81,8 +79,8 @@ void MLMultiSlider::setFillColor (const Colour& c)
 	setColour(trackFullLightColor, findColour(fillColor).overlaidWith(findColour(indicatorColor).withAlpha(0.15f)));
 	// track fill 
 	setColour(trackFullDarkColor, c.overlaidWith(Colours::black.withAlpha(0.17f)).withMultipliedSaturation(1.5f));
-
-    lookAndFeelChanged();
+	
+	lookAndFeelChanged();
 }
 
 #pragma mark -
@@ -97,7 +95,7 @@ const MLRect MLMultiSlider::getActiveRect() const
 	int y = kMLShadowThickness;
 	return MLRect(x, y, w, h);
 }
-	
+
 int MLMultiSlider::getSliderWidth() const
 {
 	int w = getWidth() - 16;
@@ -105,7 +103,7 @@ int MLMultiSlider::getSliderWidth() const
 	const int sw = dials ? (w / dials) : 1;
 	return sw;
 }
-	
+
 #pragma mark -
 
 void MLMultiSlider::paint (Graphics& g)
@@ -129,12 +127,12 @@ void MLMultiSlider::paint (Graphics& g)
 	for (int i=0; i<mNumSliders; ++i)
 	{
 		MLRect sr = (mPos.getElementBounds(i));
-
+		
 		dialY = drawRange(getFloatProperty(ml::textUtils::addFinalNumber(ml::Symbol("value"), i)));
 		fullRect = sr;
 		emptyRect = sr;		
 		fullRect.setTop(dialY);
-	
+		
 		fullColor = findColour(trackFullDarkColor);
 		emptyColor = findColour(trackEmptyDarkColor);
 		
@@ -154,7 +152,7 @@ void MLMultiSlider::paint (Graphics& g)
 		full.addRectangle(MLToJuceRect(fullRect));
 		g.setColour(fullColor);
 		g.fillPath(full);	
-				
+		
 		g.setColour(outlineColor);
 		g.strokePath(empty, PathStrokeType (outlineThickness));
 	}
@@ -164,7 +162,7 @@ void MLMultiSlider::paint (Graphics& g)
 
 void MLMultiSlider::mouseDown (const MouseEvent& e)
 {
-    if (!isEnabled()) return;
+	if (!isEnabled()) return;
 	mMousePos = Vec2(e.x, e.y);
 	mCurrDragSlider = getSliderUnderPoint(mMousePos);
 	mouseDrag(e);
@@ -182,7 +180,7 @@ void MLMultiSlider::modifierKeysChanged (const ModifierKeys& )
 
 void MLMultiSlider::mouseMove (const MouseEvent& e)
 {
- 	if (!mDoRollover) return;
+	if (!mDoRollover) return;
 	if (!isEnabled()) return;
 	mMousePos = Vec2(e.x, e.y);
 	int s = getSliderUnderPoint(mMousePos);
@@ -242,7 +240,7 @@ void MLMultiSlider::mouseDrag(const MouseEvent& e)
 				{
 					mix = fabs(float(i - startDrag)/float(span));
 					mixedval = lerp(mCurrDragValue, val, mix);
-	
+					
 					// finish old drag and switch to dragging new dial
 					if (i != mCurrDragSlider)
 					{
@@ -288,18 +286,18 @@ float MLMultiSlider::constrainedValue (float value) const throw()
 	
 	// quantize to chunks of interval (unused)
 	/*
-	int flip = 0;
-	float fInt = mInterval*(flip ? -1.f : 1.f);
-	value = rmin + fInt * floor((value - rmin)/fInt + 0.5f);
-	*/
+	 int flip = 0;
+	 float fInt = mInterval*(flip ? -1.f : 1.f);
+	 value = rmin + fInt * floor((value - rmin)/fInt + 0.5f);
+	 */
 	
 	value = ml::clamp(value, rmin, rmax);
 	if (value <= mZeroThreshold)
 	{
 		value = 0.f;
 	}
-
-    return value;
+	
+	return value;
 }
 
 float MLMultiSlider::snapValue (float attemptedValue, const bool)
@@ -315,7 +313,7 @@ float MLMultiSlider::snapValue (float attemptedValue, const bool)
 		float rmax = mRange.getB();
 		r = ml::clamp(attemptedValue, rmin, rmax);
 	}
-
+	
 	return r;
 }
 
@@ -343,7 +341,7 @@ void MLMultiSlider::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails
 	float wheelSpeed = doFineAdjust ? 0.1f : 1.f;
 	float wheelDirection = (wheel.isReversed) ? -1.f : 1.f;
 	
-    if (isEnabled())
+	if (isEnabled())
 	{
 		int s = getSliderUnderPoint(Vec2(e.x, e.y));
 		if ((s >= 0) && ! isMouseButtonDownAnywhere())
@@ -356,7 +354,7 @@ void MLMultiSlider::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails
 			const float currentPos = valueToProportionOfLength (currentVal);
 			const float newPos = ml::clamp (currentPos + posDelta, 0.f, 1.f);
 			float newValue = proportionOfLengthToValue (newPos);
-
+			
 			if(newValue != currentVal)
 			{
 				if(!isMouseWheelMoving)
@@ -364,19 +362,20 @@ void MLMultiSlider::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails
 					isMouseWheelMoving = true;
 					beginGesture();
 				}
-				mpTimer->startTimer(kWheelTimeoutDuration);
-
+				//mTimer.callOnce([&](){ endGesture(); }, milliseconds(kWheelTimeoutDuration));
+				
 				mCurrDragSlider = s;
 				sendSliderAction(snapValue (newValue, false), s);
-				mpTimer->startTimer(kWheelTimeoutDuration);
+				mTimer.callOnce([&](){ endGesture(); }, milliseconds(kWheelTimeoutDuration));
+				
 				mCurrDragSlider = -1;
 			}
-        }
-    }
-    else
-    {
-        Component::mouseWheelMove (e, wheel);
-    }
+		}
+	}
+	else
+	{
+		Component::mouseWheelMove (e, wheel);
+	}
 }
 
 
@@ -397,13 +396,13 @@ void MLMultiSlider::sendSliderAction (float val, int selector)
 	ml::Symbol sliderName = ml::textUtils::addFinalNumber("value", selector);
 	float currentValue = getFloatProperty(sliderName);
 	float newValue = constrainedValue(val);
-
-    if (currentValue != newValue)
-    {
+	
+	if (currentValue != newValue)
+	{
 		ml::Symbol targetPropertyName = ml::textUtils::addFinalNumber(getTargetPropertyName(), selector);
 		setPropertyImmediate(sliderName, newValue);
 		sendAction("change_property", targetPropertyName, getProperty(sliderName));
-    }
+	}
 }
 
 void MLMultiSlider::setWave(int w)
@@ -418,19 +417,19 @@ void MLMultiSlider::setWave(int w)
 		{
 			case 1: // square
 				val = i <mNumSliders/2 ? 0 : 1;
-			break;
+				break;
 			case 2: // sine
 				val = sin(i * kMLTwoPi / mNumSliders)/-2. + 0.5;
-			break;
+				break;
 			case 3: // saw
 				val = (float)i / (float)(mNumSliders - 1);
-			break;
+				break;
 			case 4: // random
 				val = mRand.getSample();
-			break;
+				break;
 			default:
 				val = 0.5;
-			break;
+				break;
 		}	
 		val = vRange(val);
 		sendSliderAction(val, i);
@@ -443,12 +442,12 @@ void MLMultiSlider::setWave(int w)
 
 void MLMultiSlider::resizeWidget(const MLRect& b, const int )
 {
-//	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
-
+	//	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
+	
 	Component* pC = getComponent();
 	mPos.setBounds(b);
 	pC->setBounds(MLToJuceRectInt(mPos.getBounds()));
-
+	
 	int s = mNumSliders;
 	mPos.setElements(s);
 	mPos.setGeometry(MLPositioner::kHorizontal); 
@@ -457,44 +456,44 @@ void MLMultiSlider::resizeWidget(const MLRect& b, const int )
 	Vec2 panelSize = mPos.getElementSize();
 	
 	/*
-	// setup ImageBank
-	mImageBank.setImages(kMLStepDisplayImages);
-	mImageBank.setDims(panelSize[0], panelSize[1]);
-	mImageBank.clearPanels();
-	for(int i = 0; i < panels; ++i)
-	{
-		mImageBank.addPanel(myPos.getElementPosition(i));
-	}
-	*/
+	 // setup ImageBank
+	 mImageBank.setImages(kMLStepDisplayImages);
+	 mImageBank.setDims(panelSize[0], panelSize[1]);
+	 mImageBank.clearPanels();
+	 for(int i = 0; i < panels; ++i)
+	 {
+	 mImageBank.addPanel(myPos.getElementPosition(i));
+	 }
+	 */
 	
 	/*
-	// colors
-	Colour stepOnColor (findColour (MLStepDisplay::stepOnColourId));	
-	Colour stepOffColor (findColour (MLStepDisplay::stepOffColourId));	
-	Colour outlineOnColor = findColour(MLLookAndFeel::outlineColor).overlaidWith(stepOnColor.withAlpha(0.5f));
-	Colour outlineOffColor = findColour(MLLookAndFeel::outlineColor);
-	Colour stepColor, outlineColor;
-	
-	// draw images to ImageBank
-	for (int i=0; i<kMLStepDisplayImages; ++i)
-	{
-		Image& img = mImageBank.getImage(i);
-		Graphics g(img);	
-		
-		float val = (float)i / (float)(kMLStepDisplayImages-1);
-		stepColor = stepOffColor.overlaidWith(stepOnColor.withAlpha(val));
-		outlineColor = outlineOffColor.overlaidWith(outlineOnColor.withAlpha(val));
-
-		const Colour onAlphaColor = stepOnColor.withMultipliedAlpha(val);
-		const Colour blinkerColor = stepOffColor.overlaidWith(onAlphaColor);
-		const Colour myOutlineColor = outlineOffColor.overlaidWith(outlineOnColor.withMultipliedAlpha(val));
-
-		const float outlineThickness = 0.75f;
-		myLookAndFeel->drawMLButtonShape (g, 0, 0, panelSize[0], panelSize[1],
-			r, blinkerColor, myOutlineColor, outlineThickness, eMLAdornNone, 0., 0.);	
-			
-	}
-	*/
+	 // colors
+	 Colour stepOnColor (findColour (MLStepDisplay::stepOnColourId));	
+	 Colour stepOffColor (findColour (MLStepDisplay::stepOffColourId));	
+	 Colour outlineOnColor = findColour(MLLookAndFeel::outlineColor).overlaidWith(stepOnColor.withAlpha(0.5f));
+	 Colour outlineOffColor = findColour(MLLookAndFeel::outlineColor);
+	 Colour stepColor, outlineColor;
+	 
+	 // draw images to ImageBank
+	 for (int i=0; i<kMLStepDisplayImages; ++i)
+	 {
+	 Image& img = mImageBank.getImage(i);
+	 Graphics g(img);	
+	 
+	 float val = (float)i / (float)(kMLStepDisplayImages-1);
+	 stepColor = stepOffColor.overlaidWith(stepOnColor.withAlpha(val));
+	 outlineColor = outlineOffColor.overlaidWith(outlineOnColor.withAlpha(val));
+	 
+	 const Colour onAlphaColor = stepOnColor.withMultipliedAlpha(val);
+	 const Colour blinkerColor = stepOffColor.overlaidWith(onAlphaColor);
+	 const Colour myOutlineColor = outlineOffColor.overlaidWith(outlineOnColor.withMultipliedAlpha(val));
+	 
+	 const float outlineThickness = 0.75f;
+	 myLookAndFeel->drawMLButtonShape (g, 0, 0, panelSize[0], panelSize[1],
+	 r, blinkerColor, myOutlineColor, outlineThickness, eMLAdornNone, 0., 0.);	
+	 
+	 }
+	 */
 	
 	// Component::resized();
 }
@@ -519,23 +518,4 @@ void MLMultiSlider::endGesture()
 		mGestureInProgress = false;
 	}
 }
-
-#pragma mark MLMultiSlider::GestureTimer
-
-MLMultiSlider::GestureTimer::GestureTimer(MLMultiSlider* pM) :
-mpOwner(pM)
-{
-}
-
-MLMultiSlider::GestureTimer::~GestureTimer()
-{
-	stopTimer();
-}
-
-void MLMultiSlider::GestureTimer::timerCallback()
-{
-	stopTimer();
-    mpOwner->endGesture();
-}
-
 

@@ -6,12 +6,12 @@
 #include "MLAppState.h"
 
 MLAppState::MLAppState(MLPropertySet* pM, const std::string& name, const std::string& makerName, const std::string& appName, int version) :
-    MLPropertyListener(pM),
-	mExtraName(name),
-	mMakerName(makerName),
-	mAppName(appName),
-	mAppVersion(version),
-	mpTarget(pM)
+MLPropertyListener(pM),
+mExtraName(name),
+mMakerName(makerName),
+mAppName(appName),
+mAppVersion(version),
+mpTarget(pM)
 {
 	// default extra name
 	if(mExtraName.length() == 0)
@@ -20,17 +20,11 @@ MLAppState::MLAppState(MLPropertySet* pM, const std::string& name, const std::st
 	}
 	
 	updateAllProperties();
-	startTimer(1000);
+	mTimer.start([&](){ updateChangedProperties(); }, milliseconds(1000));
 }
 
 MLAppState::~MLAppState()
 {
-	stopTimer();
-}
-
-void MLAppState::timerCallback()
-{
-	updateChangedProperties();
 }
 
 void MLAppState::ignoreProperty(ml::Symbol property)
@@ -43,8 +37,8 @@ void MLAppState::ignoreProperty(ml::Symbol property)
 // 
 void MLAppState::doPropertyChangeAction(ml::Symbol p, const MLProperty & val)
 {
-    // nothing to do here, but we do need to be an MLPropertyListener in order to
-    // know the update states of all the Properties.
+	// nothing to do here, but we do need to be an MLPropertyListener in order to
+	// know the update states of all the Properties.
 	
 	// debug() << "MLAppState " << mName << ": doPropertyChangeAction: " << p << " to " << val << "\n";
 }
@@ -93,7 +87,7 @@ void MLAppState::saveStateToStateFile()
 		if(!dir.isDirectory())
 		{
 			debug() << "MLAppState:: file present instead of directory " << 
-				dir.getFileName() << "!  Aborting.\n";
+			dir.getFileName() << "!  Aborting.\n";
 		}
 	}
 	else 
@@ -140,7 +134,7 @@ cJSON* MLAppState::getStateAsJSON()
 	updateAllProperties();
 	
 	cJSON* root = cJSON_CreateObject();
-
+	
 	// get Model parameters
 	// std::map<ml::Symbol, PropertyState>::iterator it;
 	for(auto it = mPropertyStates.begin(); it != mPropertyStates.end(); it++)
@@ -160,22 +154,22 @@ cJSON* MLAppState::getStateAsJSON()
 					cJSON_AddStringToObject(root, keyStr, state.mValue.getTextValue().getText());
 					break;
 				case MLProperty::kSignalProperty:
-					{
-						// make and populate JSON object representing signal
-						cJSON* signalObj = cJSON_CreateObject();
-						const MLSignal& sig = state.mValue.getSignalValue();
-						cJSON_AddStringToObject(signalObj, "type", "signal");
-						cJSON_AddNumberToObject(signalObj, "width", sig.getWidth());
-						cJSON_AddNumberToObject(signalObj, "height", sig.getHeight());
-						cJSON_AddNumberToObject(signalObj, "depth", sig.getDepth());
-						int size = sig.getSize();
-						float* pSignalData = sig.getBuffer();
-						cJSON* data = cJSON_CreateFloatArray(pSignalData, size);
-						cJSON_AddItemToObject(signalObj, "data", data);
-						
-						// add signal object to state JSON
-						cJSON_AddItemToObject(root, keyStr, signalObj);
-					}
+				{
+					// make and populate JSON object representing signal
+					cJSON* signalObj = cJSON_CreateObject();
+					const MLSignal& sig = state.mValue.getSignalValue();
+					cJSON_AddStringToObject(signalObj, "type", "signal");
+					cJSON_AddNumberToObject(signalObj, "width", sig.getWidth());
+					cJSON_AddNumberToObject(signalObj, "height", sig.getHeight());
+					cJSON_AddNumberToObject(signalObj, "depth", sig.getDepth());
+					int size = sig.getSize();
+					float* pSignalData = sig.getBuffer();
+					cJSON* data = cJSON_CreateFloatArray(pSignalData, size);
+					cJSON_AddItemToObject(signalObj, "data", data);
+					
+					// add signal object to state JSON
+					cJSON_AddItemToObject(root, keyStr, signalObj);
+				}
 					break;
 				default:
 					debug() << "MLAppState::saveStateToStateFile(): undefined param type! \n";
@@ -190,7 +184,7 @@ cJSON* MLAppState::getStateAsJSON()
 	
 	cJSON * appName = cJSON_CreateString(mAppName.c_str());
 	cJSON_ReplaceOrAddItemToObject(root, "app_name", appName);
-
+	
 	cJSON * appVersion = cJSON_CreateNumber(mAppVersion);
 	cJSON_ReplaceOrAddItemToObject(root, "app_version", appVersion);
 	
@@ -252,12 +246,12 @@ void MLAppState::setStateFromJSON(cJSON* pNode, int depth)
 			switch(child->type & 255)
 			{
 				case cJSON_Number:
-//		debug() << " depth " << depth << " loading float param " << child->string << " : " << child->valuedouble << "\n";
+					//		debug() << " depth " << depth << " loading float param " << child->string << " : " << child->valuedouble << "\n";
 					mpTarget->setProperty(key, (float)child->valuedouble);
 					break;
 				case cJSON_String:
-//		debug() << " depth " << depth << " loading string param " << child->string << " : " << child->valuestring << "\n";
-
+					//		debug() << " depth " << depth << " loading string param " << child->string << " : " << child->valuestring << "\n";
+					
 					mpTarget->setProperty(key, child->valuestring);
 					break;
 				case cJSON_Object:
@@ -320,42 +314,42 @@ void MLAppState::setStateFromJSON(cJSON* pNode, int depth)
 
 void MLAppState::loadDefaultState()
 {
-//	load defaultappstate_txt ?
+	//	load defaultappstate_txt ?
 }
 
 File MLAppState::getAppStateDir() const
 {
- 	String makerName(File::createLegalFileName (String(mMakerName)));
- 	String applicationName(File::createLegalFileName (String(mAppName)));
-
-   #if JUCE_MAC || JUCE_IOS
-    File dir ("~/Library/Application Support"); // user Library
-    dir = dir.getChildFile (makerName);
-    dir = dir.getChildFile (applicationName);
-
-   #elif JUCE_LINUX || JUCE_ANDROID
+	String makerName(File::createLegalFileName (String(mMakerName)));
+	String applicationName(File::createLegalFileName (String(mAppName)));
+	
+#if JUCE_MAC || JUCE_IOS
+	File dir ("~/Library/Application Support"); // user Library
+	dir = dir.getChildFile (makerName);
+	dir = dir.getChildFile (applicationName);
+	
+#elif JUCE_LINUX || JUCE_ANDROID
 	File dir ("~/" "." + makerName + "/" + applicationName);
-
-   #elif JUCE_WINDOWS
-    File dir (File::getSpecialLocation (File::userApplicationDataDirectory));
-
-    if (dir == File::nonexistent)
-        return File::nonexistent;
-
-    dir = dir.getChildFile(makerName);
-    dir = dir.getChildFile(applicationName);
-   #endif
-
+	
+#elif JUCE_WINDOWS
+	File dir (File::getSpecialLocation (File::userApplicationDataDirectory));
+	
+	if (dir == File::nonexistent)
+		return File::nonexistent;
+	
+	dir = dir.getChildFile(makerName);
+	dir = dir.getChildFile(applicationName);
+#endif
+	
 	return dir;
 }
 
 File MLAppState::getAppStateFile() const
 {
-    String applicationName(mAppName);
+	String applicationName(mAppName);
 	String extension("txt");
 	File dir(getAppStateDir());
 	std::string extra;
-    return dir.getChildFile(applicationName + mExtraName + "State").withFileExtension (extension);
+	return dir.getChildFile(applicationName + mExtraName + "State").withFileExtension (extension);
 }
 
 void MLAppState::clearStateStack()
@@ -389,3 +383,4 @@ void MLAppState::returnToFirstSavedState()
 		setStateFromBinary(p);
 	}
 }
+

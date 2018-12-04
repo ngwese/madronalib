@@ -32,24 +32,6 @@ void MLReporter::PropertyListener::doPropertyChangeAction(ml::Symbol property, c
 	mpOwnerReporter->enqueuePropertyChange(property, newVal);
 }
 
-// MLReporter::ReporterTimer
-
-MLReporter::ReporterTimer::ReporterTimer(MLReporter* pR) :
-mpOwnerReporter(pR)
-{
-	startTimer(33);
-}
-
-MLReporter::ReporterTimer::~ReporterTimer()
-{
-	stopTimer();
-}
-
-void MLReporter::ReporterTimer::timerCallback()
-{
-	mpOwnerReporter->viewProperties();
-}
-
 // MLReporter
 	
 MLReporter::MLReporter()
@@ -59,11 +41,14 @@ MLReporter::MLReporter()
 	// setup event queue
 	mChangeQueue = std::unique_ptr< Queue<Symbol> >(new Queue<Symbol>(size));
 
-	mpTimer = std::unique_ptr<ReporterTimer>(new ReporterTimer(this));
+	mTimer.start([&]() { viewProperties(); }, milliseconds(33));
+
 }
 
 MLReporter::~MLReporter()
 {
+	std::cout << "STOPPING reporter\n";
+	mTimer.stop();
 }
 
 void MLReporter::enqueuePropertyChange(ml::Symbol prop, const MLProperty& newVal)
@@ -112,6 +97,11 @@ void MLReporter::addPropertyViewToMap(ml::Symbol modelProp, MLWidget* w, ml::Sym
 
 void MLReporter::viewProperties()
 {
+	// TIMER
+	return;//
+	const juce::MessageManagerLock mml (Thread::getCurrentThread());	
+	if (!mml.lockWasGained()) return;
+
 	while(Symbol propName = mChangeQueue->pop())
 	{
 		// do we have viewers for this property?
@@ -124,7 +114,9 @@ void MLReporter::viewProperties()
 			{
 				MLPropertyViewPtr pv = (*vit);
 				const MLPropertyView& v = (*pv);
-				v.view(mCurrentProperties.getProperty(propName));
+				{
+					v.view(mCurrentProperties.getProperty(propName));
+				}
 			}
 		}
 	}

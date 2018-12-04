@@ -27,12 +27,11 @@ mShouldDisconnect(false)
   setPortOffset(0);
   
   // start protocol polling
-  startTimer(500);
+	mTimer.start([&](){ poll(); }, milliseconds(500));
 }
 
 MLT3DHub::~MLT3DHub()
 {
-  stopTimer();
   disconnect();
 }
 
@@ -229,7 +228,7 @@ void MLT3DHub::endBundle(const osc::ReceivedBundle& b)
   mTouchFrames.push(mLatestTouchFrame);
 }
 
-void MLT3DHub::timerCallback()
+void MLT3DHub::poll()
 {
   static const int kT3DTimeout = 4; // in cycles of this timer
   

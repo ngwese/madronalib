@@ -205,6 +205,8 @@ void MLButton::doPropertyChangeAction(ml::Symbol property, const MLProperty& val
     else if(property == "highlight")
     {
     }
-	repaint();
+	
+	// TIMER
+	// repaint();
 }
 

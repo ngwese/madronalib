@@ -791,7 +791,7 @@ public:
         
         // sine approx.
         return x*(1.0f - kOneSixth*x*x) * kScale;
-    }
+    }  
 private:
 	int32_t mOmega32, mStep32;
     float mInvSrDomain;

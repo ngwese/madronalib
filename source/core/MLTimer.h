@@ -12,6 +12,7 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <mutex>
 
 using namespace std::chrono;
 
@@ -23,7 +24,7 @@ namespace ml
 	// that might take longer, send a message from the callback and
 	// then receive it and do the action in a private thread.
 	
-	class Timer
+	class Timer final
 	{
 		friend class Timers;
 	
@@ -36,10 +37,12 @@ namespace ml
 		Timer(Timer&&) = delete;                  // Move construct
 		Timer& operator=(Timer const&) = delete;  // Copy assign
 		Timer& operator=(Timer &&) = delete;      // Move assign
-
+		
 		// call the function once after the specified interval.
 		void callOnce(std::function<void(void)> f, const milliseconds period)
 		{
+			// mutex prevents the run thread from working with a partially initialized Timer
+			std::lock_guard<std::mutex> lock(mMutex);
 			mCounter = 1;
 			myFunc = f;
 			mPeriod = period;
@@ -49,6 +52,8 @@ namespace ml
 		// call the function n times, waiting the specified interval before each.
 		void callNTimes(std::function<void(void)> f, const milliseconds period, int n)
 		{
+			// mutex prevents the run thread from working with a partially initialized Timer
+			std::lock_guard<std::mutex> lock(mMutex);
 			mCounter = n;
 			myFunc = f;
 			mPeriod = period;
@@ -58,10 +63,12 @@ namespace ml
 		// start calling the function periodically. the wait period happens before the first call.
 		void start(std::function<void(void)> f, const milliseconds period)
 		{
+			// mutex prevents the run thread from working with a partially initialized Timer
+			std::lock_guard<std::mutex> lock(mMutex);
 			mCounter = -1;
 			myFunc = f;
 			mPeriod = period;
-			mPreviousCall = system_clock::now();
+			mPreviousCall = system_clock::now();			
 		}
 
 		bool isActive()
@@ -72,7 +79,12 @@ namespace ml
 		void stop();
 		
 	private:
-		int mCounter{0};
+		int test{0};
+		std::mutex mMutex;
+		std::atomic<bool> mCallingFromRunThread{false};
+		
+		int mCounter{0}; // TODO atomic, relaxed ordering
+		
 		std::function<void(void)> myFunc;
 		milliseconds mPeriod;
 		time_point<system_clock> mPreviousCall;
