@@ -35,7 +35,6 @@ extern "C" {
         uint8_t deckey[32];
     } aes256_context; 
 
-
     void aes256_init(aes256_context *, const uint8_t * /* key */);
     void aes256_done(aes256_context *);
     void aes256_encrypt_ecb(aes256_context *, uint8_t * /* plaintext */);

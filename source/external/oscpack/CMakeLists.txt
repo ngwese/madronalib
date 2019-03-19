@@ -70,3 +70,25 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic")
 endif()
+
+#--------------------------------------------------------------------
+# create and install libraries
+#--------------------------------------------------------------------
+
+# TEMP -- install liboscpack.a
+
+if(APPLE)
+# include(GNUInstallDirs)
+install(
+    TARGETS oscpack
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+else()
+	#TODO osc for windows
+endif()
+
+
+
+
