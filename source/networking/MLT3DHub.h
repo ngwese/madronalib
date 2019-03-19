@@ -9,26 +9,18 @@
 #pragma once
 
 #include <iostream>
+#include <stdexcept>
+#include <chrono>
+#include <array>
 
-//#include "MLDSPDeprecated.h"
 #include "MLPlatform.h"
 #include "MLOSCReceiver.h"
 #include "MLNetServiceHub.h"
 #include "MLT3DPorts.h"
 #include "MLTimer.h"
-
-//#include "MLDebug.h"
-//#include "MLSignal.h"
-
 #include "MLProperty.h"
 #include "MLSymbol.h"
 #include "MLQueue.h"
-
-
-#include <stdexcept>
-#include <chrono>
-
-#include <array>
 
 static const int kMaxTouches = 16;
 static const int kFrameBufferSize = 128;
