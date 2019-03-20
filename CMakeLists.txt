@@ -21,13 +21,13 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(ML_BUILD_EXAMPLES "Build the examples" OFF)
-option(ML_BUILD_TESTS "Build the ML test programs" OFF)
+option(BUILD_EXAMPLES "Build the examples" ON)
+option(BUILD_TESTS "Build the ML test programs" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(ML_BUILD_DOCS "Build the ML documentation" OFF)
-option(ML_DOCUMENT_INTERNALS "Include internals in documentation" OFF)
+option(BUILD_DOCS "Build the ML documentation" OFF)
+option(DOCUMENT_INTERNALS "Include internals in documentation" OFF)
 
-if (ML_BUILD_DOCS)
+if (BUILD_DOCS)
     set(DOXYGEN_SKIP_DOT TRUE)
     find_package(Doxygen)
 endif()
@@ -67,11 +67,11 @@ include_directories(include)
 
 add_subdirectory(source)
 
-if (ML_BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-if (ML_BUILD_TESTS)
+if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
@@ -79,7 +79,7 @@ endif()
 # Make docs (someday)
 #--------------------------------------------------------------------
 
-#if (DOXYGEN_FOUND AND ML_BUILD_DOCS)
+#if (DOXYGEN_FOUND AND BUILD_DOCS)
 #    add_subdirectory(docs)
 #endif()
 

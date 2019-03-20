@@ -15,9 +15,7 @@ TEST_CASE("madronalib/core/procs", "[procs]")
 	std::unique_ptr<Proc> pm (ProcFactory::theFactory().create("multiply")); 
 	REQUIRE(pm != nullptr);
 	
-	DSPVector va, vb, vc;
-	va = 2;
-	vb = 3;
+	DSPVector va{2}, vb{3}, vc;
 	
 	pm->setInput("foo", va);
 	pm->setInput("bar", vb);

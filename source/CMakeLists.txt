@@ -51,11 +51,6 @@ add_source_dir("external/aes256")
 add_source_dir("external/cJSON")
 
 
-
-# add_subdirectory("external/oscpack")
-
-# TODO add platform-specific oscpack source
-
 # send binary output to the current build/bin
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -106,7 +101,7 @@ endif()
 
 
 # TEMP print sources
-message ("madronalib sources:" ${madronalib_SOURCES})
+# message ("madronalib sources:" ${madronalib_SOURCES})
 
 
 
@@ -183,23 +178,6 @@ endif()
 # Add libraries
 #--------------------------------------------------------------------
 
-if(APPLE)
-    target_link_libraries(madronalib oscpack)
-else()
-endif()
-
-# Juce Libraries
-
-if(BUILD_NEW_ONLY)
-else(BUILD_NEW_ONLY)
-  target_link_libraries(madronalib juce_audio_basics)
-  target_link_libraries(madronalib juce_audio_devices)
-  target_link_libraries(madronalib juce_core)
-  target_link_libraries(madronalib juce_graphics)
-  target_link_libraries(madronalib juce_gui_basics)
-  target_link_libraries(madronalib juce_gui_extra)
-  target_link_libraries(madronalib juce_opengl)
-endif()
 
 if(APPLE)
   target_link_libraries(madronalib "-framework Carbon")

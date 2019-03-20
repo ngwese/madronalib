@@ -18,6 +18,32 @@ if ("${OPENGL_INCLUDE_DIR}")
     include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
 
+
+#--------------------------------------------------------------------
+# Add include Directories
+#--------------------------------------------------------------------
+
+include_directories("${CMAKE_SOURCE_DIR}/source/app")
+include_directories("${CMAKE_SOURCE_DIR}/source/DSP")
+include_directories("${CMAKE_SOURCE_DIR}/source/matrix")
+include_directories("${CMAKE_SOURCE_DIR}/source/networking")
+include_directories("${CMAKE_SOURCE_DIR}/source/procs")
+
+# external libraries
+include_directories("${CMAKE_SOURCE_DIR}/source/external/aes256")
+include_directories("${CMAKE_SOURCE_DIR}/source/external/cJSON")
+include_directories("${CMAKE_SOURCE_DIR}/source/external/ffft")
+
+include_directories("${CMAKE_SOURCE_DIR}/source/external/oscpack/ip")
+include_directories("${CMAKE_SOURCE_DIR}/source/external/oscpack/osc")
+include_directories("${CMAKE_SOURCE_DIR}/source/external/oscpack/zeroconf")
+
+include_directories("${CMAKE_SOURCE_DIR}/external/utf")
+
+if ("${OPENGL_INCLUDE_DIR}")
+    include_directories("${OPENGL_INCLUDE_DIR}")
+endif()
+
 #--------------------------------------------------------------------
 # Compiler flags
 #--------------------------------------------------------------------
@@ -27,6 +53,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 #--------------------------------------------------------------------
 # Add all the tests.
 #--------------------------------------------------------------------
+
+
+
+message ("adding tests..." )
+
+
 
 add_executable(tests 
 	catch.hpp 
@@ -40,6 +72,5 @@ add_executable(tests
 	timerTest.cpp
 	tests.cpp
 	tests.h 
-
 	)
 
