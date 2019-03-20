@@ -367,7 +367,7 @@ _PS_CONST(cephes_exp_p5, 5.0000001201E-1);
 
 inline SIMDVectorFloat vecExp(SIMDVectorFloat x) 
 {
-	SIMDVectorFloat tmp = _mm_setzero_ps(), fx;
+	SIMDVectorFloat tmp, fx;
 	SIMDVectorInt emm0;
 	SIMDVectorFloat one = *(SIMDVectorFloat*)_ps_1;
 	
@@ -457,7 +457,7 @@ _PS_CONST(cephes_FOPI, 1.27323954473516); // 4 / M_PI
  */
 inline SIMDVectorFloat vecSin(SIMDVectorFloat x) 
 {
-	SIMDVectorFloat xmm1, xmm2 = _mm_setzero_ps(), xmm3, sign_bit, y;
+	SIMDVectorFloat xmm1, xmm2, xmm3, sign_bit, y;
 	SIMDVectorInt emm0, emm2;
 
 	sign_bit = x;
@@ -540,7 +540,7 @@ inline SIMDVectorFloat vecSin(SIMDVectorFloat x)
 /* almost the same as sin_ps */
 inline SIMDVectorFloat vecCos(SIMDVectorFloat x) 
 { 
-	SIMDVectorFloat xmm1, xmm2 = _mm_setzero_ps(), xmm3, y;
+	SIMDVectorFloat xmm1, xmm2, xmm3, y;
 	SIMDVectorInt emm0, emm2;
 
 	/* take the absolute value */
@@ -618,7 +618,7 @@ inline SIMDVectorFloat vecCos(SIMDVectorFloat x)
  it is almost as fast, and gives you a free cosine with your sine */
 inline void vecSinCos(SIMDVectorFloat x, SIMDVectorFloat *s, SIMDVectorFloat *c) 
 {
-	SIMDVectorFloat xmm1, xmm2, xmm3 = _mm_setzero_ps(), sign_bit_sin, y;
+	SIMDVectorFloat xmm1, xmm2, xmm3, sign_bit_sin, y;
 	SIMDVectorInt emm0, emm2, emm4;
 
 	sign_bit_sin = x;

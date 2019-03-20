@@ -1266,7 +1266,7 @@ void MLSignal::partialDiffX()
 void MLSignal::partialDiffY()
 {
 	int i, j;
-	float * pr1, * pr2, * pr3; // input row ptrs
+	float * pr1, * pr3; // input row ptrs
 	float * prOut; 	
 	
 	MLSignal copy(*this);
@@ -1278,7 +1278,7 @@ void MLSignal::partialDiffY()
 	
 	j = 0; // top row
 	{
-		pr2 = (pIn + row(j));
+
 		pr3 = (pIn + row(j + 1));
 		prOut = (pOut + row(j));
 		
@@ -1291,7 +1291,7 @@ void MLSignal::partialDiffY()
 	for(j = 1; j < height - 1; ++j) // center rows
 	{
 		pr1 = (pIn + row(j - 1));
-		pr2 = (pIn + row(j));
+
 		pr3 = (pIn + row(j + 1));
 		prOut = (pOut + row(j));
 		
@@ -1304,7 +1304,7 @@ void MLSignal::partialDiffY()
 	j = height - 1;	// bottom row
 	{
 		pr1 = (pIn + row(j - 1));
-		pr2 = (pIn + row(j));
+
 		prOut = (pOut + row(j));
 		
 		for(i = 0; i < width; ++i) 

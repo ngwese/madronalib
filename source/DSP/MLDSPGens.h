@@ -68,11 +68,9 @@ namespace ml
 			DSPVectorInt vy;
 			for(int i=0; i<kFloatsPerDSPVector; ++i)
 			{
-				float fy = 0;
 				if(++mCounter >= mPeriod)
 				{
-					mCounter = 0; 
-					fy = 1;
+					mCounter = 0;
 				}
 				vy[i] = mCounter;
 			}

@@ -718,7 +718,10 @@ namespace ml { namespace textUtils {
 		buf[i] = 0;
 		
 		// no final number? return
-		if(!textUtils::isDigit(buf[i - 1])) return 0;
+		if(i > 0)
+		{
+			if(!textUtils::isDigit(buf[i - 1])) return 0;
+		}
 		
 		// read backwards until non-digit
 		int firstDigitPos = 0;

@@ -1,13 +1,11 @@
 // new proc. work in progress!
 
-
 #pragma once
 
 #include "mldsp.h"
 #include "MLPropertySet.h"
 
 using namespace ml;
-
 
 // constexpr string courtesy of Scott Schurr
 class constStr 
@@ -114,6 +112,7 @@ class Proc
 {
 public:
 	virtual void process() = 0;
+	virtual ~Proc() = default;
 
 	// These methods are the public interface to set a Proc's instance variables. 
 	// From inside a Proc subclass, the inline methods input(), output() and so on should be used instead.

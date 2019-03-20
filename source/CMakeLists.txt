@@ -38,9 +38,12 @@ macro(add_source_dir DIR)
   list(APPEND madronalib_SOURCES "${C_SOURCES}")
 endmacro()
 
+macro(add_header_dir DIR)
+  file(GLOB H_SOURCES "${DIR}/*.h")
+  list(APPEND madronalib_SOURCES "${H_SOURCES}")
+endmacro()
+
 set(madronalib_SOURCES "")
-
-
 
 add_source_dir("app")
 add_source_dir("matrix")
@@ -49,6 +52,12 @@ add_source_dir("procs")
 
 add_source_dir("external/aes256")
 add_source_dir("external/cJSON")
+
+# add headers. just for viewing files in the IDE - is there a better way?
+add_header_dir("app")
+add_header_dir("matrix")
+add_header_dir("networking")
+add_header_dir("procs")
 
 
 # send binary output to the current build/bin
