@@ -152,6 +152,7 @@ file(GLOB APP_HDR "app/*.h")
 file(GLOB DSP_HDR "DSP/*.h")
 file(GLOB MTX_HDR "matrix/*.h")
 file(GLOB NTW_HDR "networking/*.h")
+file(GLOB PRC_HDR "procs/*.h")
 file(GLOB AES_HDR "external/aes256/*.h")
 
 install(FILES 
@@ -159,6 +160,7 @@ install(FILES
     ${DSP_HDR}   
     ${MTX_HDR}   
     ${NTW_HDR}   
+    ${PRC_HDR}   
     ${AES_HDR}   
     DESTINATION include/madronalib)
 
