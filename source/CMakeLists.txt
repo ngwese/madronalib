@@ -98,11 +98,10 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 
-
+# TODO add platform-specific oscpack source
 
 # TEMP print sources
 # message ("madronalib sources:" ${madronalib_SOURCES})
-
 
 
 #--------------------------------------------------------------------
@@ -177,7 +176,6 @@ endif()
 #--------------------------------------------------------------------
 # Add libraries
 #--------------------------------------------------------------------
-
 
 if(APPLE)
   target_link_libraries(madronalib "-framework Carbon")
