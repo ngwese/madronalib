@@ -1,5 +1,5 @@
 //
-// MLDSPFilters.h
+// MLDSPFunctional.h
 // madronalib
 //
 // Created by Randy Jones on 4/14/2016

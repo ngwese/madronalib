@@ -35,7 +35,7 @@ namespace ml
 			}
 		}
 		
-		inline size_t advanceDistanceIndex(size_t start, int samples)
+		inline size_t advanceDistanceIndex(size_t start, size_t samples)
 		{
 			return (start + samples) & mDistanceMask;
 		}
@@ -157,11 +157,11 @@ namespace ml
 		}
 		
 		// add n samples to the buffer and advance the write index by (samples - overlap)
-		void writeWithOverlapAdd(const float* pSrc, size_t samples, int overlap)
+		void writeWithOverlapAdd(const float* pSrc, size_t samples, size_t overlap)
 		{
 			size_t available = getWriteAvailable();
 			
-			int samplesRequired = samples*2 - overlap;
+			auto samplesRequired = samples*2 - overlap;
 			
 			// don't write partial windows.
 			if(available < samplesRequired) return;
@@ -178,7 +178,7 @@ namespace ml
 			
 			// clear samples for next overlapped add
 			currentWriteIndex = advanceDistanceIndex(currentWriteIndex, samples);
-			int samplesToClear = samples - overlap;
+			auto samplesToClear = samples - overlap;
 			dr = getDataRegions(currentWriteIndex, samplesToClear);
 			
 			std::fill(dr.p1, dr.p1 + dr.size1, 0.f);
@@ -193,7 +193,7 @@ namespace ml
 		}
 		
 		// read n samples from buffer then rewind read point by overlap.
-		void readWithOverlap(float* pDest, size_t samples, int overlap)
+		void readWithOverlap(float* pDest, size_t samples, size_t overlap)
 		{
 			size_t available = getReadAvailable() + overlap;
 			samples = std::min(samples, available);
