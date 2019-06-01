@@ -592,7 +592,7 @@ void MLDSPEngine::setInputFrameBuffer(Queue<TouchFrame>* pBuf)
 	}
 	else 
 	{
-		////debug() << "MLDSPEngine::setInputFrameBuffer: no mpInputToSignalsProc!\n";
+    std::cout << "\nMLDSPEngine::setInputFrameBuffer: no mpInputToSignalsProc!\n\n";
 	}
 }
 

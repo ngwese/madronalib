@@ -128,7 +128,8 @@ private:
   void dumpEvents();
   void dumpVoices();
   void dumpSignals();
-  
+  void dumpTouchFrame();
+
   int findFreeVoice();
   int findOldestSustainedVoice();
   int findNearestVoice(int note);

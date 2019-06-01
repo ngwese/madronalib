@@ -645,6 +645,7 @@ void MLProcInputToSignals::process()
     //dumpEvents();
     //dumpVoices();
     //dumpSignals();
+    //dumpTouchFrame();
     mFrameCounter -= sr;
   }
 }
@@ -661,6 +662,7 @@ float VelocityFromInitialZ(float z)
 void MLProcInputToSignals::processOSC(const int frames)
 {
   float dx, dy;
+  const int km = kMaxTouches;
   
   // TODO this code only updates every signal vector (64 samples).  Add sample-accurate
   // reading from OSC.
@@ -672,25 +674,29 @@ void MLProcInputToSignals::processOSC(const int frames)
   while (mpFrameBuf->elementsAvailable() > 0)
   {
     (mpFrameBuf->pop(mLatestTouchFrame));
-		Touch maxTouch{};
-		
-		if(mUnisonMode)
-		{
-			float maxZ = 0.f;
-			for (int v=0; v<mCurrentVoices; ++v)
-			{
-				Touch t = mLatestTouchFrame[v];
-				if(t.z > maxZ)
-				{
-					maxTouch = t;
-				}
-			}
-		}
-	
-		
+
+    TouchFrame sortedTouches = mLatestTouchFrame;
+    std::sort(sortedTouches.begin(), sortedTouches.end(), [&](Touch t, Touch u){ return t.z > u.z; });
+
+
+    /*
+    // MLTEST
+    static int count{};
+    count += frames;
+    if (count > 44100)
+    {
+      count -= 44100;
+      for(int i=0; i<mCurrentVoices; ++i)
+      {
+        std::cout << sortedTouches[i].z << " ";
+      }
+      std::cout << "\n";
+    }
+*/
+
 		for (int v=0; v<mCurrentVoices; ++v)
 		{
-			Touch t = mUnisonMode ? maxTouch : mLatestTouchFrame[v];
+			Touch t = mUnisonMode ? sortedTouches[0] : sortedTouches[v];
 			
 			dx = 0.;
 			dy = 0.;
@@ -743,7 +749,6 @@ void MLProcInputToSignals::processOSC(const int frames)
 			mVoices[v].mdMod3.addChange(t.y*2.f - 1.f, frameTime);
 		}
 	}
-  
 }
 
 // process control events to make change lists
@@ -1488,14 +1493,14 @@ void MLProcInputToSignals::dumpSignals()
   for (int i=0; i<mCurrentVoices; ++i)
   {
     //debug() << "voice " << i << ": ";
-    
+
     // changes per voice
     MLSignal& pitch = getOutput(i*kNumVoiceSignals + 1);
     MLSignal& gate = getOutput(i*kNumVoiceSignals + 2);
     MLSignal& vel = getOutput(i*kNumVoiceSignals + 3);
     MLSignal& voice = getOutput(i*kNumVoiceSignals + 4);
     MLSignal& after = getOutput(i*kNumVoiceSignals + 5);
-    
+
     //debug() << "[pitch: " << pitch[0] << "] ";
     //debug() << "[gate : " << gate[0] << "] ";
     //debug() << "[vel  : " << vel[0] << "] ";
@@ -1504,5 +1509,26 @@ void MLProcInputToSignals::dumpSignals()
     //debug() << "\n";
   }
   //debug() << "\n";
+}
+
+
+void MLProcInputToSignals::dumpTouchFrame()
+{
+
+  TouchFrame t = mLatestTouchFrame;
+
+  for (int i=0; i<kMaxTouches; ++i)
+  {
+    std::cout << "[" << t[i].z << "] ";
+
+
+    //debug() << "[pitch: " << pitch[0] << "] ";
+    //debug() << "[gate : " << gate[0] << "] ";
+    //debug() << "[vel  : " << vel[0] << "] ";
+    //debug() << "[voice: " << voice[0] << "] ";
+    //debug() << "[after: " << after[0] << "] ";
+    //debug() << "\n";
+  }
+  std::cout << "\n";
 }
 
