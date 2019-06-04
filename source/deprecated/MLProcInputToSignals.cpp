@@ -145,6 +145,15 @@ void MLVoice::zeroExceptPitch()
   mdMod3.zero();
 }
 
+void MLVoice::zeroPressure()
+{
+  mdGate.zero();
+  mdAmp.zero();
+  mdVel.zero();
+  mdNotePressure.zero();
+  mdChannelPressure.zero();
+}
+
 void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
 {
   int time = e.mTime;
@@ -172,13 +181,13 @@ void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
       vel = 0.;
       break;
   }
-  
+
   // set immediate state
   mState = newState;
   mInstigatorID = e.mID;
   mNote = note;
   mAge = 0;
-  
+
   // add timed changes to lists for note ons/offs
   if(e.mType != MLControlEvent::kNoteSustain)
   {
@@ -187,7 +196,7 @@ void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
     if(e.mType == MLControlEvent::kNoteOff)
     {
       mdNotePressure.addChange(0, time);
-      
+
       // for MPE mode when controlling envelopes with aftertouch: ensure
       // notes are not sending pressure when off
       mdChannelPressure.addChange(0, time);
@@ -198,7 +207,7 @@ void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
       mdVel.addChange(vel, time);
     }
   }
-  
+
   mCurrentNoteEvent = e;
 }
 
@@ -208,12 +217,12 @@ void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool
   float vel = e.mValue2;
   int time = e.mTime;
   if (time == 0) time++; // in case where time = 0, make room for retrigger.
-  
+
   mInstigatorID = e.mID;
   mNote = note;
   mAge = 0;
   mdPitch.addChange(scale.noteToLogPitch(note), time);
-  
+
   if (retrig)
   {
     mdGate.addChange(0.f, time - 1);
@@ -221,11 +230,11 @@ void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool
     //mdChannelPressure.addChange(0.f, time - 1);
     //mdVel.addChange(0.f, time - 1);
   }
-  
+
   mdGate.addChange(1, time);
   mdAmp.addChange(vel, time);
   mdVel.addChange(vel, time);
-  
+
   mCurrentNoteEvent = e;
   mState = kOn;
 }
@@ -257,31 +266,31 @@ mSustainPedal(false)
   setParam("voices", 0);  // default
   setParam("protocol", kInputProtocolMIDI);  // default
   setParam("data_rate", 100);  // default
-  
+
   mVoiceRotateOffset = 0;
   mNextEventIdx = 0;
   mEventTimeOffset = 0;
-  
+
   mPitchWheelSemitones = 7.f;
   mUnisonMode = false;
   mRotateMode = true;
   mEventCounter = 0;
   mDriftCounter = -1;
-  
+
   temp = 0;
   mOSCDataRate = 100;
-  
+
   // TODO lockfree queue template
   //  mEventData.resize(kMaxEvents);
   //  PaUtil_InitializeRingBuffer( &mEventQueue, sizeof(MLControlEvent), kMaxEvents, &(mEventData[0]) );
-  
+
   /*
    int remaining = PaUtil_GetRingBufferReadAvailable(&mFileActionQueue);
-   
+
    FileAction a;
    int filesRead = 0;
-   
-   
+
+
    if((filesRead = PaUtil_ReadRingBuffer( &mFileActionQueue, &a, 1 )))
    {
    if(a.mFile.exists())
@@ -292,15 +301,15 @@ mSustainPedal(false)
    mMaxFileQueueSize = ml::max(filesInQueue, mMaxFileQueueSize);
    if(!filesInQueue) endConvertPresets();
    }
-   
-   
+
+
    // add file action to queue
    FileAction f(action, fileToProcess, &collection, idx, size);
    PaUtil_WriteRingBuffer( &mFileActionQueue, &f, 1 );
-   
-   
+
+
    */
-	
+
   mNoteEventsPlaying.resize(kMaxEvents);
   mNoteEventsPending.resize(kMaxEvents);
 }
@@ -332,17 +341,17 @@ MLProc::err MLProcInputToSignals::resize()
 {
   float sr = getContextSampleRate();
   static const ml::Symbol bufsizeSym("bufsize");
-  
+
   MLProc::err re = OK;
-  
+
   // resize voices
   //
   int bufSize = (int)getParam(bufsizeSym);
   int vecSize = getContextVectorSize();
-  
+
   int maxVoices = getContext()->getRootContext()->getMaxVoices();
   mVoices.resize(maxVoices);
-  
+
   MLProc::err r;
   for(int i=0; i<maxVoices; ++i)
   {
@@ -350,7 +359,7 @@ MLProc::err MLProcInputToSignals::resize()
     mVoices[i].resize(bufSize);
   }
   mMPEMainVoice.resize(bufSize);
-  
+
   // make signals that apply to all voices
   mTempSignal.setDims(vecSize);
   mMainPitchSignal.setDims(vecSize);
@@ -359,7 +368,7 @@ MLProc::err MLProcInputToSignals::resize()
   mMainMod2Signal.setDims(vecSize);
   mMainMod3Signal.setDims(vecSize);
 
-  
+
   // make outputs
   //
   for(int i=1; i <= maxVoices * kNumVoiceSignals; ++i)
@@ -369,7 +378,7 @@ MLProc::err MLProcInputToSignals::resize()
       setOutput(i, getContext()->getNullOutput());
     }
   }
-  
+
   // do voice params
   //
   for(int i=0; i<maxVoices; ++i)
@@ -384,7 +393,7 @@ MLProc::err MLProcInputToSignals::resize()
       mVoices[i].mdDrift.setGlideTime(kDriftInterval);
     }
   }
-  
+
   clearChangeLists();
   return re;
 }
@@ -399,9 +408,9 @@ int MLProcInputToSignals::getOutputIndex(const ml::Symbol name)
   int idx = 0;
   int voice = 0;
   int sig = 0;
-  
+
   ml::Symbol name0 = ml::textUtils::stripFinalNumber(name);
-  
+
   // match signal name with symbol text
   for(int n=0; n<kNumVoiceSignals; ++n)
   {
@@ -411,7 +420,7 @@ int MLProcInputToSignals::getOutputIndex(const ml::Symbol name)
       break;
     }
   }
-  
+
   // get voice number from end of symbol
   if (sig)
   {
@@ -421,12 +430,12 @@ int MLProcInputToSignals::getOutputIndex(const ml::Symbol name)
       idx = (voice - 1)*kNumVoiceSignals + sig;
     }
   }
-  
+
   if (!idx)
   {
     //debug() << "MLProcInputToSignals::getOutputIndex: null output " << name << "\n";
   }
-  
+
   return idx;
 }
 
@@ -440,22 +449,22 @@ void MLProcInputToSignals::doParams()
   int maxVoices = getContext()->getRootContext()->getMaxVoices();
   int newVoices = (int)getParam(voicesSym);
   newVoices = ml::clamp(newVoices, 0, 15);
-  
+
   // TODO enable / disable voice containers here
   mOSCDataRate = (int)getParam(data_rateSym);
-  
+
   const ml::Text& scaleName = getTextParam(scaleSym);
   mScale.loadFromRelativePath(scaleName);
-	
-	mMasterTune = getParam("master_tune");
-	if(within(mMasterTune, 220.f, 880.f))
-	{
-		mMasterPitchOffset = log2f(mMasterTune/440.f);
-	}
+
+  mMasterTune = getParam("master_tune");
+  if(within(mMasterTune, 220.f, 880.f))
+  {
+    mMasterPitchOffset = log2f(mMasterTune/440.f);
+  }
 
   const int newProtocol = (int)getParam(protocolSym);
   mProtocol = newProtocol;
-  
+
   mGlide = getParam(glideSym);
   for (int v=0; v<maxVoices; ++v)
   {
@@ -463,9 +472,9 @@ void MLProcInputToSignals::doParams()
     mVoices[v].mdPitchBend.setGlideTime(mGlide);
   }
   mMPEMainVoice.mdPitchBend.setGlideTime(mGlide);
-  
+
   float oscGlide = (1.f / std::max(100.f, (float)mOSCDataRate));
-  
+
   switch(mProtocol)
   {
     case kInputProtocolOSC:
@@ -496,26 +505,26 @@ void MLProcInputToSignals::doParams()
       }
       break;
   }
-  
+
   if (newVoices != mCurrentVoices)
   {
     mCurrentVoices = newVoices;
     clear();
   }
-  
+
   // pitch wheel mult
   mPitchWheelSemitones = getParam(bendSym);
-  
+
   // listen to controller number mod
   mControllerNumber = (int)getParam(modSym);
-  
+
   int unison = (int)getParam(unisonSym);
   if (mUnisonMode != unison)
   {
     mUnisonMode = unison;
     clear();
   }
-  
+
   mParamsChanged = false;
   //dumpParams();  // DEBUG
 }
@@ -530,20 +539,20 @@ void MLProcInputToSignals::clear()
 {
   int vecSize = getContextVectorSize();
   int maxVoices = getContext()->getRootContext()->getMaxVoices();
-  
+
   // resize if needed, a hack
   if(mVoices.size() != maxVoices)
   {
     resize();
   }
   clearChangeLists();
-  
+
   for(int i=0; i<kMaxEvents; ++i)
   {
     mNoteEventsPlaying[i].clear();
     mNoteEventsPending[i].clear();
   }
-  
+
   int outs = getNumOutputs();
   if (outs)
   {
@@ -551,8 +560,9 @@ void MLProcInputToSignals::clear()
     {
       mVoices[v].clearState();
       mVoices[v].clearChanges();
-      mVoices[v].zeroExceptPitch();
-      
+//      mVoices[v].zeroExceptPitch();
+      mVoices[v].zeroPressure();
+
       MLSignal& pitch = getOutput(v*kNumVoiceSignals + 1);
       MLSignal& gate = getOutput(v*kNumVoiceSignals + 2);
       MLSignal& velSig = getOutput(v*kNumVoiceSignals + 3);
@@ -561,23 +571,24 @@ void MLProcInputToSignals::clear()
       MLSignal& mod = getOutput(v*kNumVoiceSignals + 6);
       MLSignal& mod2 = getOutput(v*kNumVoiceSignals + 7);
       MLSignal& mod3 = getOutput(v*kNumVoiceSignals + 8);
-      
+
       mVoices[v].mdPitch.writeToSignal(pitch, vecSize);
       mVoices[v].mdGate.writeToSignal(gate, vecSize);
       mVoices[v].mdVel.writeToSignal(velSig, vecSize);
       voiceSig.setToConstant(v);
-      
+
       mVoices[v].mdNotePressure.writeToSignal(after, vecSize);
       mVoices[v].mdChannelPressure.writeToSignal(after, vecSize);
       mVoices[v].mdAmp.writeToSignal(after, vecSize);
-      
+
       mVoices[v].mdMod.writeToSignal(mod, vecSize);
       mVoices[v].mdMod2.writeToSignal(mod2, vecSize);
       mVoices[v].mdMod3.writeToSignal(mod3, vecSize);
     }
     mMPEMainVoice.clearState();
     mMPEMainVoice.clearChanges();
-    mMPEMainVoice.zeroExceptPitch();
+//    mMPEMainVoice.zeroExceptPitch();
+    mMPEMainVoice.zeroPressure();
   }
   mEventCounter = 0;
 }
@@ -599,7 +610,7 @@ void MLProcInputToSignals::process()
   if (mParamsChanged) doParams();
   int sr = getContextSampleRate();
   clearChangeLists();
-  
+
 #if INPUT_DRIFT
   // update drift change list for each voice
   if ((mDriftCounter < 0) || (mDriftCounter > sr*kDriftInterval))
@@ -613,7 +624,7 @@ void MLProcInputToSignals::process()
   }
   mDriftCounter += kFloatsPerDSPVector;
 #endif
-  
+
   // update age for each voice
   for (int v=0; v<mCurrentVoices; ++v)
   {
@@ -622,7 +633,7 @@ void MLProcInputToSignals::process()
       mVoices[v].mAge += kFloatsPerDSPVector;
     }
   }
-  
+
   // generate change lists
   // TODO osc becomes events
   switch(mProtocol)
@@ -635,10 +646,10 @@ void MLProcInputToSignals::process()
       processEvents();
       break;
   }
-  
+
   // generate output signals from change lists
   writeOutputSignals(kFloatsPerDSPVector);
-  
+
   mFrameCounter += kFloatsPerDSPVector;
   if(mFrameCounter > sr)
   {
@@ -663,115 +674,156 @@ void MLProcInputToSignals::processOSC(const int frames)
 {
   float dx, dy;
   const int km = kMaxTouches;
-  
+  constexpr int kTimeOut = 50; // TODO depends on data rate!
+
   // TODO this code only updates every signal vector (64 samples).  Add sample-accurate
   // reading from OSC.
-  
+
   if(!mpFrameBuf) return;
-  
+
+  constexpr float kZThresh = 0.00001f;
+
+
   // read from mpFrameBuf, which is being filled up by OSC listener thread
   // we can't simply throw away any frames because they may contain note-ons or note-offs
   while (mpFrameBuf->elementsAvailable() > 0)
   {
     (mpFrameBuf->pop(mLatestTouchFrame));
 
-    TouchFrame sortedTouches = mLatestTouchFrame;
-    std::sort(sortedTouches.begin(), sortedTouches.end(), [&](Touch t, Touch u){ return t.z > u.z; });
+    mLatestTouchFrameSorted = mLatestTouchFrame;
+    std::sort(mLatestTouchFrameSorted.begin(), mLatestTouchFrameSorted.end(), [&](Touch t, Touch u){ return t.z > u.z; });
 
 
     /*
-    // MLTEST
-    static int count{};
-    count += frames;
-    if (count > 44100)
-    {
-      count -= 44100;
-      for(int i=0; i<mCurrentVoices; ++i)
-      {
-        std::cout << sortedTouches[i].z << " ";
-      }
-      std::cout << "\n";
-    }
-*/
+     // MLTEST
+     static int count{};
+     count += frames;
+     if (count > 44100)
+     {
+     count -= 44100;
+     for(int i=0; i<mCurrentVoices; ++i)
+     {
+     std::cout << sortedTouches[i].z << " ";
+     }
+     std::cout << "\n";
+     }
+     */
 
-		for (int v=0; v<mCurrentVoices; ++v)
-		{
-			Touch t = mUnisonMode ? sortedTouches[0] : sortedTouches[v];
-			
-			dx = 0.;
-			dy = 0.;
-			
-			if (t.z > 0.f)
-			{
-				if (mVoices[v].mZ1 <= 0.)
-				{
-					// process note on
-					mVoices[v].mStartX = t.x;
-					mVoices[v].mStartY = t.y;
-					mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
-					
-					// start velocity is sent as first z value over t3d
-					mVoices[v].mStartVel = VelocityFromInitialZ(t.z);
-					dx = 0.f;
-					dy = 0.f;
-				}
-				else
-				{
-					// note continues
-					mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
-					dx = t.x - mVoices[v].mStartX;
-					dy = t.y - mVoices[v].mStartY;
-				}
-				mVoices[v].mX1 = t.x;
-				mVoices[v].mY1 = t.y;
-			}
-			else
-			{
-				if (mVoices[v].mZ1 > 0.)
-				{
-					// process note off, set pitch for release
-					t.x = mVoices[v].mX1;
-					t.y = mVoices[v].mY1;
-				}
-			}
-			
-			mVoices[v].mZ1 = t.z;
-			
-			const int frameTime = 1;
-			mVoices[v].mdPitch.addChange(mVoices[v].mPitch, frameTime);
-			mVoices[v].mdGate.addChange((int)(t.z > 0.), frameTime);
-			mVoices[v].mdVel.addChange(mVoices[v].mStartVel, frameTime);
-			mVoices[v].mdAmp.addChange(t.z, frameTime);
-			
-			mVoices[v].mdNotePressure.addChange(dx, frameTime);
-			mVoices[v].mdMod.addChange(dy, frameTime);
-			mVoices[v].mdMod2.addChange(t.x*2.f - 1.f, frameTime);
-			mVoices[v].mdMod3.addChange(t.y*2.f - 1.f, frameTime);
-		}
-	}
+
+
+    // check for stuck notes
+    // TODO improve this at Source! Don't send duplicates or something
+
+    float zSum{};
+    for (int v=0; v<mCurrentVoices; ++v)
+    {
+      //std::cout << mLatestTouchFrameSorted[v].z << " ";
+      zSum += mLatestTouchFrameSorted[v].z;
+    }
+
+    if (zSum == mPreviousMaxZ) // check for any changes, not strictly correct
+    {
+      mNullFrameCounter++;
+    }
+    else
+    {
+      mPreviousMaxZ = zSum;
+      mNullFrameCounter = 0;
+    }
+
+    //std::cout << " null: " << mNullFrameCounter << "\n";
+
+    if(mNullFrameCounter < kTimeOut) // MLTEST
+    {
+
+      for (int v=0; v<mCurrentVoices; ++v)
+      {
+        Touch t = mUnisonMode ? mLatestTouchFrameSorted[0] : mLatestTouchFrameSorted[v];
+
+        dx = 0.;
+        dy = 0.;
+
+        if (t.z > 0.f)
+        {
+          if (mVoices[v].mZ1 <= kZThresh)
+          {
+            // process note on
+            mVoices[v].mStartX = t.x;
+            mVoices[v].mStartY = t.y;
+            mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
+
+            // start velocity is sent as first z value over t3d
+            mVoices[v].mStartVel = VelocityFromInitialZ(t.z);
+            dx = 0.f;
+            dy = 0.f;
+          }
+          else
+          {
+            // note continues
+            mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
+            dx = t.x - mVoices[v].mStartX;
+            dy = t.y - mVoices[v].mStartY;
+          }
+          mVoices[v].mX1 = t.x;
+          mVoices[v].mY1 = t.y;
+        }
+        else
+        {
+          if (mVoices[v].mZ1 > kZThresh)
+          {
+            // process note off, set pitch for release
+            t.x = mVoices[v].mX1;
+            t.y = mVoices[v].mY1;
+          }
+        }
+
+        mVoices[v].mZ1 = t.z;
+
+        const int frameTime = 1;
+        mVoices[v].mdPitch.addChange(mVoices[v].mPitch, frameTime);
+        mVoices[v].mdGate.addChange((int)(t.z > kZThresh), frameTime);
+        mVoices[v].mdVel.addChange(mVoices[v].mStartVel, frameTime);
+        mVoices[v].mdAmp.addChange(t.z, frameTime);
+
+        mVoices[v].mdNotePressure.addChange(dx, frameTime);
+        mVoices[v].mdMod.addChange(dy, frameTime);
+        mVoices[v].mdMod2.addChange(t.x*2.f - 1.f, frameTime);
+        mVoices[v].mdMod3.addChange(t.y*2.f - 1.f, frameTime);
+      }
+    }
+    else if (mNullFrameCounter == kTimeOut)
+    {
+      clear();
+    }
+    // else do nothing
+  }
+
+
+
+
 }
 
 // process control events to make change lists
 //
 void MLProcInputToSignals::processEvents()
 {
-	if(mEventQueue)
-	{
-		int n = mEventQueue->elementsAvailable();
-		for(int i=0; i<n; ++i)
-		{
-			MLControlEvent e = mEventQueue->peek();
-			uint64_t eventTimeInVector = e.mTime - mVectorStartTime;
-			if(eventTimeInVector < kFloatsPerDSPVector)
-			{
-				processEvent(mEventQueue->pop());
-			}
-			else
-			{
-				break; // assuming events are in time order
-			}
-		}
-	}
+  if(mEventQueue)
+  {
+    int n = mEventQueue->elementsAvailable();
+    for(int i=0; i<n; ++i)
+    {
+      MLControlEvent e = mEventQueue->peek();
+      uint64_t eventTimeInVector = e.mTime - mVectorStartTime;
+      if(eventTimeInVector < kFloatsPerDSPVector)
+      {
+        processEvent(mEventQueue->pop());
+      }
+      else
+      {
+        break; // assuming events are in time order
+      }
+    }
+  }
 }
 
 // process one incoming event by making the appropriate changes in state and change lists.
@@ -779,7 +831,7 @@ void MLProcInputToSignals::processEvent(const MLControlEvent &eventParam)
 {
   MLControlEvent event = eventParam;
   event.mTime -= mVectorStartTime;
-  
+
   switch(event.mType)
   {
     case MLControlEvent::kNoteOn:
@@ -815,7 +867,7 @@ void MLProcInputToSignals::doNoteOn(const MLControlEvent& event)
   int freeEventIdx = mNoteEventsPlaying.findFreeEvent();
   if(freeEventIdx < 0) return;
   mNoteEventsPlaying[freeEventIdx] = event;
-  
+
   int v, chan;
   if(mUnisonMode)
   {
@@ -846,21 +898,21 @@ void MLProcInputToSignals::doNoteOn(const MLControlEvent& event)
         {
           // find a sustained voice to steal
           v = findOldestSustainedVoice();
-          
+
           // or failing that, the voice with the nearest note
           if(v < 0)
           {
             int note = event.mValue1;
             v = findNearestVoice(note);
           }
-          
+
           // push note we are stealing to pending list and steal it
           // MLTEST: no pending
           // mNoteEventsPending.push(mVoices[v].mCurrentNoteEvent);
           mVoices[v].stealNoteEvent(event, mScale, true);
         }
         break;
-        
+
       case kInputProtocolMIDI_MPE:
         chan = event.mChannel;
         if(chan > 1)
@@ -892,7 +944,7 @@ void MLProcInputToSignals::doNoteOff(const MLControlEvent& event)
       mNoteEventsPlaying[i].clear();
     }
   }
-  
+
   if(mUnisonMode)
   {
     // if note off is the sounding event,
@@ -946,7 +998,7 @@ void MLProcInputToSignals::doNoteOff(const MLControlEvent& event)
             voice.addNoteEvent(eventToSend, mScale);
           }
         }
-        
+
         // activate pending notes
         if(voiceReleased >= 0)
         {
@@ -976,7 +1028,7 @@ void MLProcInputToSignals::doNoteOff(const MLControlEvent& event)
           MLControlEvent eventToSend = event;
           eventToSend.mType = newEventType;
           voice.addNoteEvent(eventToSend, mScale);
-          
+
           if(newEventType == MLControlEvent::kNoteOff)
           {
             if(!mNoteEventsPending.isEmpty())
@@ -1022,88 +1074,88 @@ void MLProcInputToSignals::doController(const MLControlEvent& event)
   int ctrl = event.mValue1;
   int chan = event.mChannel;
   float val = event.mValue2;
-  
+
   switch(mProtocol)
   {
     case kInputProtocolMIDI:
     {
-			if(ctrl == 120)
-			{
-				if(val == 0)
-				{
-					// all sound off
-					clear();
-				}
-			}
-			else if(ctrl == 123)
-			{
-				if(val == 0)
-				{
-					// all notes off
-					for(int v=0; v<mCurrentVoices; ++v)
-					{
-						MLVoice& voice = mVoices[v];
-						if(voice.mState != MLVoice::kOff)
-						{
-							MLControlEvent eventToSend = event;
-							eventToSend.mType = MLControlEvent::kNoteOff;
-							voice.addNoteEvent(eventToSend, mScale);
-						}
-					}
-				}
-			}
-			else
-			{
-				for (int i=0; i<mCurrentVoices; ++i)
-				{
-					if(ctrl == mControllerNumber)
-						mVoices[i].mdMod.addChange(val, time);
-					else if (ctrl == mControllerNumber + 1)
-						mVoices[i].mdMod2.addChange(val, time);
-					else if (ctrl == mControllerNumber + 2)
-						mVoices[i].mdMod3.addChange(val, time);
-				}
-			}
+      if(ctrl == 120)
+      {
+        if(val == 0)
+        {
+          // all sound off
+          clear();
+        }
+      }
+      else if(ctrl == 123)
+      {
+        if(val == 0)
+        {
+          // all notes off
+          for(int v=0; v<mCurrentVoices; ++v)
+          {
+            MLVoice& voice = mVoices[v];
+            if(voice.mState != MLVoice::kOff)
+            {
+              MLControlEvent eventToSend = event;
+              eventToSend.mType = MLControlEvent::kNoteOff;
+              voice.addNoteEvent(eventToSend, mScale);
+            }
+          }
+        }
+      }
+      else
+      {
+        for (int i=0; i<mCurrentVoices; ++i)
+        {
+          if(ctrl == mControllerNumber)
+            mVoices[i].mdMod.addChange(val, time);
+          else if (ctrl == mControllerNumber + 1)
+            mVoices[i].mdMod2.addChange(val, time);
+          else if (ctrl == mControllerNumber + 2)
+            mVoices[i].mdMod3.addChange(val, time);
+        }
+      }
       break;
     }
     case kInputProtocolMIDI_MPE:
     {
       if(chan == 1) // MPE main voice
       {
-				if(ctrl == 120)
-				{
-					if(val == 0)
-					{
-						// all sound off
-						clear();
-					}
-				}
-				else if(ctrl == 123)
-				{
-					if(val == 0)
-					{
-						// all notes off
-						for(int v=0; v<mCurrentVoices; ++v)
-						{
-							MLVoice& voice = mVoices[v];
-							if(voice.mState != MLVoice::kOff)
-							{
-								MLControlEvent eventToSend = event;
-								eventToSend.mType = MLControlEvent::kNoteOff;
-								voice.addNoteEvent(eventToSend, mScale);
-							}
-						}
-					}
-				}
-				else
-				{
-					if (ctrl == 73) // x always 73
-						mMPEMainVoice.mdMod2.addChange(val, time);
-					else if (ctrl == 74) // y always 74
-						mMPEMainVoice.mdMod3.addChange(val, time);
-					else if(ctrl == mControllerNumber)
-						mMPEMainVoice.mdMod.addChange(val, time);
-				}
+        if(ctrl == 120)
+        {
+          if(val == 0)
+          {
+            // all sound off
+            clear();
+          }
+        }
+        else if(ctrl == 123)
+        {
+          if(val == 0)
+          {
+            // all notes off
+            for(int v=0; v<mCurrentVoices; ++v)
+            {
+              MLVoice& voice = mVoices[v];
+              if(voice.mState != MLVoice::kOff)
+              {
+                MLControlEvent eventToSend = event;
+                eventToSend.mType = MLControlEvent::kNoteOff;
+                voice.addNoteEvent(eventToSend, mScale);
+              }
+            }
+          }
+        }
+        else
+        {
+          if (ctrl == 73) // x always 73
+            mMPEMainVoice.mdMod2.addChange(val, time);
+          else if (ctrl == 74) // y always 74
+            mMPEMainVoice.mdMod3.addChange(val, time);
+          else if(ctrl == mControllerNumber)
+            mMPEMainVoice.mdMod.addChange(val, time);
+        }
       }
       else
       {
@@ -1131,7 +1183,7 @@ void MLProcInputToSignals::doPitchWheel(const MLControlEvent& event)
   float u = ctr / 8191.f;
   float bendAdd = u * mPitchWheelSemitones / 12.f;
   int chan = event.mChannel;
-  
+
   switch(mProtocol)
   {
     case kInputProtocolMIDI:
@@ -1221,7 +1273,7 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
     mMPEMainVoice.mdMod2.writeToSignal(mMainMod2Signal, frames);
     mMPEMainVoice.mdMod3.writeToSignal(mMainMod3Signal, frames);
   }
-  
+
   int maxVoices = getContext()->getRootContext()->getMaxVoices();
   for (int v=0; v<maxVoices; ++v)
   {
@@ -1234,44 +1286,44 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
     MLSignal& mod = getOutput(v*kNumVoiceSignals + 6);
     MLSignal& mod2 = getOutput(v*kNumVoiceSignals + 7);
     MLSignal& mod3 = getOutput(v*kNumVoiceSignals + 8);
-    
+
     // write signals
     if (v < mCurrentVoices)
     {
       // write pitch
       mVoices[v].mdPitch.writeToSignal(pitch, frames);
-      
+
       // add pitch bend in semitones to pitch
       mVoices[v].mdPitchBend.writeToSignal(mTempSignal, frames);
       pitch.add(mTempSignal);
-      
+
       // in plain MIDI mode, all notes are sent on the same channel,
       // bend and other controllers are only set from latest voice.
-      
+
       // add main channel pitch bend for MPE
       if(mProtocol == kInputProtocolMIDI_MPE)
       {
         pitch.add(mMainPitchSignal);
       }
-      
+
 #if INPUT_DRIFT
       // write to common temp drift signal, we add one change manually so read offset is 0
       mVoices[v].mdDrift.writeToSignal(mTempSignal, frames);
       pitch.add(mTempSignal);
 #endif
-			
-			// write master_tune param offset
-			mTempSignal.fill(mMasterPitchOffset);
-			pitch.add(mTempSignal);
-			
+
+      // write master_tune param offset
+      mTempSignal.fill(mMasterPitchOffset);
+      pitch.add(mTempSignal);
+
       mVoices[v].mdGate.writeToSignal(gate, frames);
-      
+
       // initial velocity output
       mVoices[v].mdVel.writeToSignal(velSig, frames);
-      
+
       // voice constant output
       voiceSig.setToConstant(v);
-      
+
       // aftertouch / z output
       switch(mProtocol)
       {
@@ -1291,24 +1343,24 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
           mVoices[v].mdAmp.writeToSignal(after, frames);
           break;
       }
-      
+
       mVoices[v].mdMod.writeToSignal(mod, frames);
       mVoices[v].mdMod2.writeToSignal(mod2, frames);
       mVoices[v].mdMod3.writeToSignal(mod3, frames);
-      
+
       if(mProtocol == kInputProtocolMIDI_MPE)
       {
         mod.add(mMainModSignal);
         mod2.add(mMainMod2Signal);
         mod3.add(mMainMod3Signal);
-        
+
         // over MPE, we can make bipolar x and y signals to match the OSC usage.
         mod2.scale(2.0f);
         mod2.add(-1.0f);
         mod3.scale(2.0f);
         mod3.add(-1.0f);
       }
-      
+
       // clear change lists
       mVoices[v].mdPitch.clearChanges();
       mVoices[v].mdPitchBend.clearChanges();
@@ -1375,7 +1427,7 @@ int MLProcInputToSignals::findOldestSustainedVoice()
       sustainedVoices.push_back(i);
     }
   }
-  
+
   int maxAge = -1;
   for(std::list<int>::const_iterator it = sustainedVoices.begin();
       it != sustainedVoices.end(); it++)
@@ -1531,4 +1583,5 @@ void MLProcInputToSignals::dumpTouchFrame()
   }
   std::cout << "\n";
 }
+
 
