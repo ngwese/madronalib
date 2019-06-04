@@ -38,6 +38,7 @@ public:
   void resize(int size);
   void zero();
   void zeroExceptPitch();
+  void zeroPressure();
   
   // send a note on, off or sustain event to the voice.
   void addNoteEvent(const MLControlEvent& e, const MLScale& scale);
@@ -144,7 +145,8 @@ private:
   MLProcInfo<MLProcInputToSignals> mInfo;
   Queue<TouchFrame>* mpFrameBuf{nullptr};
   TouchFrame mLatestTouchFrame;
-	
+  TouchFrame mLatestTouchFrameSorted;
+
   // TODO remove these custom container types
   MLControlEventVector mNoteEventsPlaying;    // notes with keys held down and sounding
   MLControlEventStack mNoteEventsPending;    // notes stolen that may play again when voices are freed
@@ -198,6 +200,9 @@ private:
   
   uint64_t mVectorStartTime;
   ml::NoiseGen mRand;
+
+  int mNullFrameCounter{};
+  float mPreviousMaxZ{};
 };
 
 
