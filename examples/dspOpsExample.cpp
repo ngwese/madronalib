@@ -5,7 +5,9 @@
 #include <chrono>
 #include <thread>
 
-#include "MLDSP.h" 
+#include "MLDSP.h"
+#include "MLDSPFunctional.h"
+
 //#include "madronalib.h"
 
 #ifdef _WINDOWS
@@ -132,12 +134,10 @@ int main()
 	
 	DSPVector tick;
 	tick[0] = 1;
-	
 
 	// upsampler for a generator with 1 input row, 1 output row
 	Upsample2xFunction<1, 1> upper;	
 	std::cout << "\n\n" << upper([&](const DSPVector x){ return sineGen(x); }, DSPVector(440.f/44100.f))  << "\n\n";
-	
 
 	// IntegerDelay p(100);
 	//std::cout << "\n\n" << p(DSPVector(), DSPVector()) << "\n" << p(DSPVector(), DSPVector()) << "\n\n";

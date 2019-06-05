@@ -75,6 +75,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/utf)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/core)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/model)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/DSP)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/procs)
 
