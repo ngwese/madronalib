@@ -22,8 +22,8 @@
  ==============================================================================
  */
 
-#include "../../external/juce/JUCE/modules/juce_core/system/juce_TargetPlatform.h"
-#include "../utility/juce_CheckSettingMacros.h"
+#include <juce_core/system/juce_TargetPlatform.h>
+#include <juce_audio_plugin_client/utility/juce_CheckSettingMacros.h>
 
 #if JucePlugin_Build_AU
 
