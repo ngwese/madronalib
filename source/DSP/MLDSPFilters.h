@@ -725,12 +725,18 @@ namespace ml
 			mDelay2.setDelayInSamples(0);
 		}
 		
-		PitchbendableDelay(float d) : mDelay1(d), mDelay2(d)
-		{
-			mDelay1.setDelayInSamples(0);
-			mDelay2.setDelayInSamples(0);
-		}
-		
+    PitchbendableDelay(float d) : mDelay1(d), mDelay2(d)
+    {
+      mDelay1.setDelayInSamples(0);
+      mDelay2.setDelayInSamples(0);
+    }
+
+    inline void setDelayInSamples(int d)
+    {
+      mDelay1.setDelayInSamples(d);
+      mDelay2.setDelayInSamples(d);
+    }
+
 		~PitchbendableDelay() {}
 		
 		inline DSPVector operator()(const DSPVector vInput, const DSPVector vDelayInSamples)
