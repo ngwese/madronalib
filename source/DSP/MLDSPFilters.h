@@ -913,30 +913,45 @@ namespace ml
 			return vy;
 		}
 		
-		inline DSPVector downsample(const DSPVector vx1, const DSPVector vx2)
-		{
-			DSPVector vy;
-			int i2 = 0;
-			for(int i = 0; i < kFloatsPerDSPVector/2; ++i)
-			{
-				float a0 = apa1.processSample(apa0.processSample(vx1[i2]));
-				float b0 = apb1.processSample(apb0.processSample(vx1[i2 + 1]));
-				vy[i] = (a0 + b1)*0.5f;
-				b1 = b0;
-				i2 += 2;
-			}	
-			i2 = 0;			
-			for(int i = kFloatsPerDSPVector/2; i < kFloatsPerDSPVector; ++i)
-			{
-				float a0 = apa1.processSample(apa0.processSample(vx2[i2]));
-				float b0 = apb1.processSample(apb0.processSample(vx2[i2 + 1]));
-				vy[i] = (a0 + b1)*0.5f;
-				b1 = b0;
-				i2 += 2;
-			}	
-			return vy;
-		}
-		
+    inline DSPVector downsample(const DSPVector vx1, const DSPVector vx2)
+    {
+      DSPVector vy;
+      int i2 = 0;
+      for(int i = 0; i < kFloatsPerDSPVector/2; ++i)
+      {
+        float a0 = apa1.processSample(apa0.processSample(vx1[i2]));
+        float b0 = apb1.processSample(apb0.processSample(vx1[i2 + 1]));
+        vy[i] = (a0 + b1)*0.5f;
+        b1 = b0;
+        i2 += 2;
+      }
+      i2 = 0;
+      for(int i = kFloatsPerDSPVector/2; i < kFloatsPerDSPVector; ++i)
+      {
+        float a0 = apa1.processSample(apa0.processSample(vx2[i2]));
+        float b0 = apb1.processSample(apb0.processSample(vx2[i2 + 1]));
+        vy[i] = (a0 + b1)*0.5f;
+        b1 = b0;
+        i2 += 2;
+      }
+      return vy;
+    }
+
+    inline DSPVector downsampleToFirstHalf(const DSPVector vx1)
+    {
+      DSPVector vy;
+      int i2 = 0;
+      for(int i = 0; i < kFloatsPerDSPVector/2; ++i)
+      {
+        float a0 = apa1.processSample(apa0.processSample(vx1[i2]));
+        float b0 = apb1.processSample(apb0.processSample(vx1[i2 + 1]));
+        vy[i] = (a0 + b1)*0.5f;
+        b1 = b0;
+        i2 += 2;
+      }
+      return vy;
+    }
+
 	private:
 		
 		// order=4, rejection=70dB, transition band=0.1. 
