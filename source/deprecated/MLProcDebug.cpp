@@ -92,12 +92,12 @@ void MLProcDebug::process()
 	mTemp += kFloatsPerDSPVector;
 	if (mTemp > intervalFrames)
 	{
-		//debug() << std::setw(6);
-		//debug() << std::setprecision(2);
-		//debug() << "sig " << getName() << " (" << static_cast<const void *>(&in) << "), n=" << kFloatsPerDSPVector << " = " << std::setprecision(4) << in[0] ;
-		//debug() << " min:" << in.getMin() << ", max:" << in.getMax();
-		//debug() << "\n";
-//		//debug() << "RATE: " << getContextSampleRate() << " / " << in.getRate() << "\n";
+		debug() << std::setw(6);
+		debug() << std::setprecision(2);
+		debug() << "sig " << getName() << " (" << static_cast<const void *>(&in) << "), n=" << kFloatsPerDSPVector << " = " << std::setprecision(4) << in[0] ;
+		debug() << " min:" << in.getMin() << ", max:" << in.getMax();
+		debug() << "\n";
+//		debug() << "RATE: " << getContextSampleRate() << " / " << in.getRate() << "\n";
 		
 		mTemp -= intervalFrames;
 		
