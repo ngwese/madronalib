@@ -66,7 +66,7 @@
  directory (or whatever you've named it on your machine). The introjucer has
  a special box for setting this path.
  */
-#include "../../../vst3sdk/public.sdk/source/vst2.x/audioeffectx.h"
+#include <public.sdk/source/vst2.x/audioeffectx.h>
 #include <public.sdk/source/vst2.x/aeffeditor.h>
 #include <public.sdk/source/vst2.x/audioeffectx.cpp>
 #include <public.sdk/source/vst2.x/audioeffect.cpp>
