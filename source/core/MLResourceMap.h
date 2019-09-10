@@ -223,7 +223,7 @@ public:
 		{
 			if(it.nodeHasValue())
 			{		
-				std::cout << ml::textUtils::spaceStr(it.getDepth()) << it.getLeafName() << " [" << it->getValue() << "]\n";
+				std::cout << ml::textUtils::spaceStr(it.getDepth()) << it.getLeafName() << " [" << "]\n";
 			}
 			else
 			{
@@ -239,12 +239,29 @@ private:
 	ResourceMap<V, C>* addNode(ml::Path path)
 	{
 		ResourceMap<V, C>* pNode = this;
-		
+    int pathSize = path.getSize();
+
 		int pathDepthFound = 0;
+
+    // MLTEST
+    bool debug = false;
 		
 		// walk the path as long as branches are found in the map
 		for(Symbol key : path)
 		{
+      // break if at last node
+      if(pathDepthFound >= pathSize - 1) break;
+
+      if(key.getTextFragment() == "Complex Machines")
+      {
+        //theSymbolTable().audit();
+        //theSymbolTable().dump();
+
+        //auto n = size();
+        //std::cout << n << "\n";
+      }
+
+
 			if(pNode->mChildren.find(key) != pNode->mChildren.end())
 			{
 				pNode = &(pNode->mChildren[key]);
@@ -255,16 +272,84 @@ private:
 				break;
 			}
 		}
-		
+
+
 		// add the remainder of the path to the map.
 		for(auto it = path.begin() + pathDepthFound; it != path.end(); ++it)
 		{
+
+
 			// [] operator crates the new node
 			pNode = &(pNode->mChildren[*it]);
 		}
-		
+
+    /*
+    // add the remainder of the path to the map, again up to, but not including, the last node
+    for(int i = pathDepthFound; i < pathSize - 1; ++i)
+    {
+      // [] operator creates the new node
+      auto newNodeName = path.getElement(i);
+      pNode = &(pNode->mChildren[newNodeName]);
+    }
+
+*/
 		return pNode;
 	}
+
+
+  // add a value V to the Tree such that getValue(path) will return V.
+  // add any intermediate nodes necessary in order to put it there.
+  ResourceMap<V, C>* add(ml::Path path, V val)
+  {
+    auto pNode = this;
+    int pathSize = path.getSize();
+    int pathDepthFound = 0;
+
+    // walk the tree up to, but not including, the last node, as long as branches matching the path are found
+    for(Symbol key : path)
+    {
+      // break if at last node
+      if(pathDepthFound >= pathSize - 1) break;
+
+      if(pNode->mChildren.find(key) != pNode->mChildren.end())
+      {
+        pNode = &(pNode->mChildren[key]);
+        pathDepthFound++;
+      }
+      else
+      {
+        // break if not found
+        break;
+      }
+    }
+
+    // add the remainder of the path to the map, again up to, but not including, the last node
+    for(int i = pathDepthFound; i < pathSize - 1; ++i)
+    {
+      // [] operator creates the new node
+      auto newNodeName = path.getElement(i);
+      pNode = &(pNode->mChildren[newNodeName]);
+    }
+
+    // search for last node
+    auto lastNodeName = path.getElement(pathSize - 1);
+    if(pNode->mChildren.find(lastNodeName) == pNode->mChildren.end())
+    {
+      // if last node does not exist, emplace new value
+      pNode->mChildren.emplace(lastNodeName, std::move(val));
+    }
+    else
+    {
+      // overwrite existing value using std::move
+      // this allows the value to be some unique_ptr<stuff> .
+      pNode->mChildren[lastNodeName].mValue = std::move(val);
+    }
+
+    pNode = &(pNode->mChildren[lastNodeName]);
+    return pNode;
+  }
+
+
 	
 	// find a tree node at the specified path. 
 	// if successful, return a pointer to the node. If unsuccessful, return nullptr.
@@ -290,5 +375,8 @@ private:
 	mapT mChildren;
 	V mValue;
 };
+
+
+
 
 } // namespace ml

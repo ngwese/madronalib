@@ -134,24 +134,15 @@ void MLFileCollection::insertFileIntoMap(juce::File f)
 		// insert file or directory into file tree relative to collection root
 		TextFragment fullName(f.getFullPathName().toUTF8());
 		TextFragment relativePath = getRelativePathFromName(fullName);
-		
-		/*
-		// MLTEST
-		juce::String fStr = f.getFileNameWithoutExtension();
-		TextFragment shortName (fStr.toUTF8());
-		if (shortName.lengthInCodePoints() == 1)
-		{
-			//debug() << "insertFileIntoMap :one char: " << shortName << "\n";			
-		}
-		*/
-		
+
+
 		// MLTEST verbose
 		// returnNode = mRoot.addValue(ml::Path(relativePath), MLFile(fullName.toString()));
 		
 		ml::Path p(relativePath);
 		MLFile f(fullName.toString());
-		
-		mRoot.addValue(p, f);
+
+    mRoot.addValue(p, f);
 	}
 	else if (f.isDirectory())
 	{
