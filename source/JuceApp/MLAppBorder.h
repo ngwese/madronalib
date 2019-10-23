@@ -14,42 +14,43 @@
 
 // a component for holding a view and resizing other components nicely.
 //
-class MLAppBorder : 
-	public Component
+class MLAppBorder :
+  public Component
 {
 public:
-	MLAppBorder(MLAppView* pV);
-    ~MLAppBorder();
+  MLAppBorder(MLAppView* pV);
+  ~MLAppBorder();
 
-	void makeResizer(Component* targetComp);
-	void paint (Graphics& g);
-	void resized();
+  void makeResizer(Component* targetComp);
+  void paint (Graphics& g);
+  void resized();
 
-	void setGridUnits(int w, int h);
-	void setZoomable(bool z);
-	
-	MLBoundsConstrainer* getConstrainer() { return &myConstrainer; }
+  void setGridUnits(int w, int h);
+  void setZoomable(bool z);
+  
+  MLBoundsConstrainer* getConstrainer() { return &myConstrainer; }
 
 private:
-	int getHeightUnit();
-	MLRect centerMainViewInWindow(int u);
+  int getHeightUnit();
+  MLRect centerMainViewInWindow(int u);
 
-    // (prevent copy constructor and operator= being generated..)
-    MLAppBorder (const MLAppBorder&);
-    const MLAppBorder& operator= (const MLAppBorder&);
-	
-	MLAppView *pMainView;
-	ResizableCornerComponent* mpResizer; 
-	MLBoundsConstrainer myConstrainer;	 	
-	
-	// grid-based view resizing things. 
-	int mGridUnitsX;
-	int mGridUnitsY;	
-	
-	MLRect mBorderRect;
-	MLRect mBoundsRect;
-	
-	bool mZoomable;
+  // (prevent copy constructor and operator= being generated..)
+  MLAppBorder (const MLAppBorder&);
+  const MLAppBorder& operator= (const MLAppBorder&);
+
+  MLAppView *pMainView;
+  ResizableCornerComponent* mpResizer;
+  MLBoundsConstrainer myConstrainer;
+  
+  // grid-based view resizing things.
+  int mGridUnitsX;
+  int mGridUnitsY;
+  
+  MLRect mBorderRect;
+  MLRect mBoundsRect;
+  
+  bool mZoomable;
 };
 
 #endif // __ML_JUCE_APP_BORDER__
+

@@ -303,6 +303,9 @@ void MLAppView::resized()
 	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
 	int u = myLookAndFeel->getGridUnitSize(); 
 
+  int w = getWidth();
+  int h = getHeight();
+  
 	for(auto it = mWidgets.begin(); it != mWidgets.end(); ++it)
 	{
 		MLWidget* w = (*it).second;

@@ -2163,11 +2163,14 @@ void MLDial::resizeWidget(const MLRect& b, const int u)
 		{
 			int compWidth = getWidth();
 			int compHeight = getHeight();
-			mParameterImage = Image(Image::ARGB, compWidth + 1, compHeight + 1, true, SoftwareImageType());
-			mParameterImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);	
-			mThumbImage = Image(Image::ARGB, compWidth + 1, compHeight + 1, true, SoftwareImageType());
-			mThumbImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);            
-			mStaticImage = Image(Image::ARGB, compWidth*displayScale + 1, compHeight*displayScale + 1, true, SoftwareImageType());
+      
+			mParameterImage = Image(Image::ARGB, compWidth + 1, compHeight + 1, true, NativeImageType());
+			mParameterImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);
+      
+			mThumbImage = Image(Image::ARGB, compWidth + 1, compHeight + 1, true, NativeImageType());
+			mThumbImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);
+      
+			mStaticImage = Image(Image::ARGB, compWidth*displayScale + 1, compHeight*displayScale + 1, true, NativeImageType());
 			mStaticImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);
 		}
 		

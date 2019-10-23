@@ -71,7 +71,7 @@ void MLAppWindow::setGridUnits(int gx, int gy)
 	mGridUnitsX = gx;
 	mGridUnitsY = gy;
 
-//    mpBorder->setGridUnits(gx, gy);
+  //mpBorder->setGridUnits(gx, gy);
 }
 
 

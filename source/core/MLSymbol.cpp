@@ -134,7 +134,6 @@ namespace ml {
 		}
 	}
 
-	
 	int SymbolTable::audit()
 	{
 		int i=0;
@@ -166,7 +165,6 @@ namespace ml {
 			std::cout << "SymbolTable: error in symbol table, line " << i << ":\n";
 			std::cout << "    ID " << i << " = " << s << ", ID B = " << i2 << "\n";
 		}
-    std::cout << "SymbolTable: OK.\n";
 		return OK;
 	}
 	
