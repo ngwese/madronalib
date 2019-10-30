@@ -207,7 +207,7 @@ namespace ml
 
 		// return the symbol's TextFragment in the table.
 		// in order to show the strings in XCode's debugger, instead of the unhelpful id,
-		// edit the summary format for Symbol within XCode to {$VAR.getTextFragment().text}:s
+		// edit the summary format for Symbol within XCode to {$VAR.getUTF8Ptr()}:s
 		inline const TextFragment& getTextFragment() const
 		{
 			return theSymbolTable().getSymbolTextByID(id);

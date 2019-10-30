@@ -118,7 +118,10 @@ public:
 			std::cout << name << ": " << val << "\n";
 		}		
 	}
-	
+  
+  void broadcastProperty(ml::Symbol p, bool immediate);
+  void broadcastPropertyExcludingListener(ml::Symbol p, bool immediate, MLPropertyListener* pListenerToExclude);
+
 protected:
 	void addPropertyListener(MLPropertyListener* pL);
 	void removePropertyListener(MLPropertyListener* pToRemove);
@@ -128,8 +131,6 @@ private:
 	std::list<MLPropertyListener*> mpListeners;
 	bool mAllowNewProperties;
 	
-	void broadcastProperty(ml::Symbol p, bool immediate);
-	void broadcastPropertyExcludingListener(ml::Symbol p, bool immediate, MLPropertyListener* pListenerToExclude);
 };
 
 // MLPropertyListeners are notified when a Property of an MLPropertySet changes. They do something in
