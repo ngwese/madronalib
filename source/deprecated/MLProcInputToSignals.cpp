@@ -70,7 +70,6 @@ void MLVoice::setSampleRate(float sr)
 
 void MLVoice::resize(int bufSize)
 {
-
   // make delta lists
   // allow for one change each sample, though this is unlikely to get used.
   mdPitch.setDims(bufSize);
@@ -593,6 +592,93 @@ void MLProcInputToSignals::clear()
   mEventCounter = 0;
 }
 
+
+void MLProcInputToSignals::OSCToEvents()
+{
+  float dx, dy;
+  const int km = kMaxTouches;
+  constexpr int kTimeOut = 50; // TODO depends on data rate!
+  
+  // TODO this code only updates every signal vector. Add sample-accurate reading from OSC, incl. note on/off logic at sample rate.
+  
+  if(!mpFrameBuf) return;
+  
+  constexpr float kZThresh = 0.00001f;
+  
+  // read from mpFrameBuf, which is being filled up by OSC listener thread
+  // we can't simply throw away any frames because they may contain note-ons or note-offs
+  while (mpFrameBuf->elementsAvailable() > 0)
+  {
+    mPrevTouchFrame = mLatestTouchFrame;
+    mpFrameBuf->pop(mLatestTouchFrame);
+    
+//    std::sort(mLatestTouchFrameSorted.begin(), mLatestTouchFrameSorted.end(), [&](Touch t, Touch u){ return t.z > u.z; });
+    
+    //std::cout << " null: " << mNullFrameCounter << "\n";
+  
+    // TODO unison
+    
+    for (int v=0; v<kMaxTouches; ++v)
+    {
+      Touch t = mLatestTouchFrame[v];
+      Touch tz1 = mPrevTouchFrame[v];
+      int id = v; // event id = touch index
+
+      dx = 0.;
+      dy = 0.;
+      
+      if (t.z > kZThresh)
+      {
+        if (tz1.z <= kZThresh)
+        {
+          // make note on event
+          mVoices[v].mStartX = t.x;
+          mVoices[v].mStartY = t.y;
+          mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
+          
+          // start velocity is sent as first z value over t3d
+          mVoices[v].mStartVel = VelocityFromInitialZ(t.z);
+          dx = 0.f;
+          dy = 0.f;
+        }
+        else
+        {
+          // note continues
+          mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
+          dx = t.x - mVoices[v].mStartX;
+          dy = t.y - mVoices[v].mStartY;
+        }
+        mVoices[v].mX1 = t.x;
+        mVoices[v].mY1 = t.y;
+      }
+      else
+      {
+        if (mVoices[v].mZ1 > kZThresh)
+        {
+          // process note off, set pitch for release
+          t.x = mVoices[v].mX1;
+          t.y = mVoices[v].mY1;
+        }
+      }
+      
+      mVoices[v].mZ1 = t.z;
+      
+      const int frameTime = 1;
+      mVoices[v].mdPitch.addChange(mVoices[v].mPitch, frameTime);
+      mVoices[v].mdGate.addChange((int)(t.z > kZThresh), frameTime);
+      mVoices[v].mdVel.addChange(mVoices[v].mStartVel, frameTime);
+      mVoices[v].mdAmp.addChange(t.z, frameTime);
+      
+      mVoices[v].mdNotePressure.addChange(dx, frameTime);
+      mVoices[v].mdMod.addChange(dy, frameTime);
+      mVoices[v].mdMod2.addChange(t.x*2.f - 1.f, frameTime);
+      mVoices[v].mdMod3.addChange(t.y*2.f - 1.f, frameTime);
+    }
+
+    
+  }
+}
+
 // order of signals:
 // pitch
 // gate
@@ -636,6 +722,15 @@ void MLProcInputToSignals::process()
 
   // generate change lists
   // TODO osc becomes events
+  
+  if(mProtocol == kInputProtocolOSC)
+  {
+    OSCToEvents();
+  }
+  
+  processEvents();
+
+  /*
   switch(mProtocol)
   {
     case kInputProtocolOSC:
@@ -646,7 +741,8 @@ void MLProcInputToSignals::process()
       processEvents();
       break;
   }
-
+*/
+  
   // generate output signals from change lists
   writeOutputSignals(kFloatsPerDSPVector);
 
@@ -668,8 +764,9 @@ float VelocityFromInitialZ(float z)
   return zc*zc;
 }
 
-// TODO get rid of OSC stuff here.  The wrapper will know about OSC and MIDI, and convert them both into Event lists for the Engine.
 
+// TODO get rid of OSC stuff here.  The wrapper will know about OSC and MIDI, and convert them both into Event lists for the Engine.
+/*
 void MLProcInputToSignals::processOSC(const int frames)
 {
   float dx, dy;
@@ -683,7 +780,6 @@ void MLProcInputToSignals::processOSC(const int frames)
 
   constexpr float kZThresh = 0.00001f;
 
-
   // read from mpFrameBuf, which is being filled up by OSC listener thread
   // we can't simply throw away any frames because they may contain note-ons or note-offs
   while (mpFrameBuf->elementsAvailable() > 0)
@@ -692,24 +788,6 @@ void MLProcInputToSignals::processOSC(const int frames)
 
     mLatestTouchFrameSorted = mLatestTouchFrame;
     std::sort(mLatestTouchFrameSorted.begin(), mLatestTouchFrameSorted.end(), [&](Touch t, Touch u){ return t.z > u.z; });
-
-
-    /*
-     // MLTEST
-     static int count{};
-     count += frames;
-     if (count > 44100)
-     {
-     count -= 44100;
-     for(int i=0; i<mCurrentVoices; ++i)
-     {
-     std::cout << sortedTouches[i].z << " ";
-     }
-     std::cout << "\n";
-     }
-     */
-
-
 
     // check for stuck notes
     // TODO improve this at Source! Don't send duplicates or something
@@ -735,7 +813,6 @@ void MLProcInputToSignals::processOSC(const int frames)
 
     if(mNullFrameCounter < kTimeOut) // MLTEST
     {
-
       for (int v=0; v<mCurrentVoices; ++v)
       {
         Touch t = mUnisonMode ? mLatestTouchFrameSorted[0] : mLatestTouchFrameSorted[v];
@@ -797,11 +874,8 @@ void MLProcInputToSignals::processOSC(const int frames)
     }
     // else do nothing
   }
-
-
-
-
 }
+*/
 
 // process control events to make change lists
 //
@@ -809,7 +883,7 @@ void MLProcInputToSignals::processEvents()
 {
   if(mEventQueue)
   {
-    int n = mEventQueue->elementsAvailable();
+    auto n = mEventQueue->elementsAvailable();
     for(int i=0; i<n; ++i)
     {
       MLControlEvent e = mEventQueue->peek();
@@ -825,6 +899,7 @@ void MLProcInputToSignals::processEvents()
     }
   }
 }
+
 
 // process one incoming event by making the appropriate changes in state and change lists.
 void MLProcInputToSignals::processEvent(const MLControlEvent &eventParam)

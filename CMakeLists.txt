@@ -1,6 +1,8 @@
 # madronalib/CMakeLists.txt
 # root CMake file for madronalib project.
 
+export MACOSX_DEPLOYMENT_TARGET=10.7
+
 project(madronalib CXX)
 
 cmake_minimum_required(VERSION 2.8.12)

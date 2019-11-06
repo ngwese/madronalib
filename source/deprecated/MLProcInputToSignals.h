@@ -113,7 +113,9 @@ public:
   void setVectorStartTime(uint64_t t) { mVectorStartTime = t; }
   
 private:
-  void processOSC(const int n);
+  void OSCToEvents();
+  
+  //void processOSC(const int n);
   void processEvents();
   void writeOutputSignals(const int n);
   
@@ -144,6 +146,7 @@ private:
   
   MLProcInfo<MLProcInputToSignals> mInfo;
   Queue<TouchFrame>* mpFrameBuf{nullptr};
+  TouchFrame mPrevTouchFrame;
   TouchFrame mLatestTouchFrame;
   TouchFrame mLatestTouchFrameSorted;
 
