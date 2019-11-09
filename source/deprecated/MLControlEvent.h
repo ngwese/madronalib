@@ -47,7 +47,12 @@ public:
   EventType mType;
   
   int mChannel;
-  int mID; // the MIDI key or touch number that created the event. a note-off can match a note-on by ID.
+  int mNote;
+
+  // the MIDI key or touch number that created the event. when a voice is triggered, this ID will be stored with the voice
+  // so that later note-offs or control changes with the same ID can be routed to it.
+  int mID;
+  
   float mValue1;
   float mValue2;
 };

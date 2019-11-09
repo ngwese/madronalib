@@ -70,7 +70,7 @@ public:
   MLChangeList mdMod3;
   MLChangeList mdDrift;
   
-  MLControlEvent mCurrentNoteEvent;
+  MLControlEvent mCurrentUnisonNoteEvent;
 };
 
 extern const ml::Symbol voiceSignalNames[];
@@ -113,7 +113,7 @@ public:
   void setVectorStartTime(uint64_t t) { mVectorStartTime = t; }
   
 private:
-  void OSCToEvents();
+
   
   //void processOSC(const int n);
   void processEvents();
@@ -133,7 +133,7 @@ private:
   void dumpSignals();
   void dumpTouchFrame();
 
-  int findFreeVoice();
+  int findFreeVoice(size_t start, size_t len);
   int findOldestSustainedVoice();
   int findNearestVoice(int note);
   int findOldestVoice();

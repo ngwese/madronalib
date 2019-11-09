@@ -26,7 +26,7 @@ public:
 	void setDims(int size);
 	void clearChanges();
 	void zero();
-	void addChange(MLSample val, int time);
+	void addChange(MLSample val, size_t time);
 	void setGlideTime(float time);
 	void setSampleRate(unsigned rate);
 	

@@ -75,7 +75,7 @@ void MLChangeList::calcGlide()
 //
 // NOTE: not thread safe! current use hopefully ensures correct behavior, but 
 // this should be made explicit somehow.
-void MLChangeList::addChange(MLSample val, int time)
+void MLChangeList::addChange(MLSample val, size_t time)
 {
 	if (mChanges < mSize)
 	{
