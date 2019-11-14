@@ -10,6 +10,7 @@ const ml::Symbol scaleSym("scale");
 const ml::Symbol protocolSym("protocol");
 const ml::Symbol bendSym("bend");
 const ml::Symbol modSym("mod");
+const ml::Symbol modMPEXSym("mod_mpe_x");
 const ml::Symbol unisonSym("unison");
 const ml::Symbol glideSym("glide");
 
@@ -153,67 +154,72 @@ void MLVoice::zeroPressure()
   mdChannelPressure.zero();
 }
 
+
+
 void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
 {
   auto time = e.mTime;
-  int newState;
-  float note, gate, vel;
+
   switch(e.mType)
   {
     case MLControlEvent::kNoteOn:
-      newState = kOn;
-      note = e.mValue1;
-      gate = 1.f;
-      vel = e.mValue2;
+      // start new note, setting note and velocity from OSC or MIDI
+      mState = kOn;
+      mNote = e.mValue1;
+
+     // std::cout << "add note event ON : inst: " << e.mID << " pitch " << mNote << " vel " << e.mValue2 << "\n";
+      mdPitch.addChange(scale.noteToLogPitch(mNote), time);
+      mdGate.addChange(1.f, time);
+      mdVel.addChange(e.mValue2, time);
       
-      std::cout << "note ON : inst: " << e.mID << " pitch " << note << "\n";
+      // set start x and y from OSC
+      mStartX = e.mValue3;
+      mStartY = e.mValue4;
+      mAge = 0;
+      mInstigatorID = e.mID;
       break;
+      
+    case MLControlEvent::kNoteUpdate:
+      // update note, z, x, y from OSC
+
+      // update note and z
+      mdPitch.addChange(scale.noteToLogPitch(e.mValue1), time);
+      mdAmp.addChange(e.mValue2, time);
+      
+      // KEY outputs: dy, x, y
+      // TODO add UI / settings for relative or absolute options
+      mdMod.addChange(e.mValue4 - mStartY, time);
+      mdMod2.addChange(e.mValue3*2.f - 1.f, time);
+      mdMod3.addChange(e.mValue4*2.f - 1.f, time);
+      break;
+      
     case MLControlEvent::kNoteSustain:
-      newState = kSustain;
-      note = e.mValue1;
-      gate = 1.f;
-      vel = e.mValue2;
+      // sent when note is released iwth sustain pedal on
+      // no signal changes, but changes state to sustain
+      mState = kSustain;
       break;
     case MLControlEvent::kNoteOff:
     default:
-      newState = kOff;
-      note = mNote;
-      gate = 0.f;
-      vel = 0.;
-
-      std::cout << "note OFF: inst: " << e.mID << " pitch " << note << "\n";
-
-      break;
-  }
-
-  // set immediate state
-  mState = newState;
-  mInstigatorID = e.mID;
-  mNote = note;
-  mAge = 0;
-
-  // add timed changes to lists for note ons/offs
-  if(e.mType != MLControlEvent::kNoteSustain)
-  {
-    mdGate.addChange(gate, time);
-    mdAmp.addChange(vel, time);
-    if(e.mType == MLControlEvent::kNoteOff)
-    {
-      mdNotePressure.addChange(0, time);
-
+      mState = kOff;
+      
+    //  std::cout << "add note event OFF: inst: " << e.mID << " pitch " << mNote << "\n";
+      mdGate.addChange(0.f, time);
+      mdAmp.addChange(0.f, time);
+      mdVel.addChange(0.f, time);
+      mdNotePressure.addChange(0.f, time);
+      
       // for MPE mode when controlling envelopes with aftertouch: ensure
       // notes are not sending pressure when off
-      mdChannelPressure.addChange(0, time);
-    }
-    if(e.mType == MLControlEvent::kNoteOn)
-    {
-      mdPitch.addChange(scale.noteToLogPitch(note), time);
-      mdVel.addChange(vel, time);
-    }
+      mdChannelPressure.addChange(0.f, time);
+      mAge = 0;
+      break;
   }
-
+  
+  
+  
   mCurrentUnisonNoteEvent = e;
 }
+
 
 void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool retrig)
 {
@@ -221,12 +227,13 @@ void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool
   float vel = e.mValue2;
   auto time = e.mTime;
   if (time == 0) time++; // in case where time = 0, make room for retrigger.
-
+  
+  mState = kOn;
   mInstigatorID = e.mID;
   mNote = note;
   mAge = 0;
   mdPitch.addChange(scale.noteToLogPitch(note), time);
-
+  
   if (retrig)
   {
     mdGate.addChange(0.f, time - 1);
@@ -234,14 +241,16 @@ void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool
     //mdChannelPressure.addChange(0.f, time - 1);
     //mdVel.addChange(0.f, time - 1);
   }
-
+  
   mdGate.addChange(1, time);
   mdAmp.addChange(vel, time);
   mdVel.addChange(vel, time);
-
+  
   mCurrentUnisonNoteEvent = e;
-  mState = kOn;
+
 }
+
+
 
 #pragma mark -
 // ----------------------------------------------------------------
@@ -250,7 +259,7 @@ void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool
 namespace
 {
   MLProcRegistryEntry<MLProcInputToSignals> classReg("midi_to_signals");
-  ML_UNUSED MLProcParam<MLProcInputToSignals> params[10] = { "bufsize", "voices", "bend", "mod", "unison", "glide", "protocol", "data_rate" , "scale", "master_tune"};
+  ML_UNUSED MLProcParam<MLProcInputToSignals> params[11] = { "bufsize", "voices", "bend", "mod", "mod_mpe_x", "unison", "glide", "protocol", "data_rate" , "scale", "master_tune"};
   // no input signals.
   ML_UNUSED MLProcOutput<MLProcInputToSignals> outputs[] = {"*"};  // variable outputs
 }
@@ -258,6 +267,7 @@ namespace
 MLProcInputToSignals::MLProcInputToSignals() :
 mProtocol(-1),
 mControllerNumber(-1),
+mControllerMPEXNumber(73),
 mCurrentVoices(0),
 mFrameCounter(0),
 mGlissando(false),
@@ -519,9 +529,10 @@ void MLProcInputToSignals::doParams()
   // pitch wheel mult
   mPitchWheelSemitones = getParam(bendSym);
 
-  // listen to controller number mod
+  // listen to controller number mods
   mControllerNumber = (int)getParam(modSym);
-
+  mControllerMPEXNumber = (int)getParam(modMPEXSym);
+  
   int unison = (int)getParam(unisonSym);
   if (mUnisonMode != unison)
   {
@@ -664,125 +675,21 @@ void MLProcInputToSignals::process()
   if(mFrameCounter > sr)
   {
     //dumpEvents();
-    dumpVoices();
-    dumpSignals();
+    //dumpVoices();
+    //dumpSignals();
     //dumpTouchFrame();
     mFrameCounter -= sr;
   }
 }
 
 
-// TODO get rid of OSC stuff here.  The wrapper will know about OSC and MIDI, and convert them both into Event lists for the Engine.
-/*
-void MLProcInputToSignals::processOSC(const int frames)
+// moving this to the implementation from header fixed an issue where time was not getting updated.
+// mystery bug.
+void MLProcInputToSignals::setVectorStartTime(uint64_t t)
 {
-  float dx, dy;
-  const int km = kMaxTouches;
-  constexpr int kTimeOut = 50; // TODO depends on data rate!
-
-  // TODO this code only updates every signal vector (64 samples).  Add sample-accurate
-  // reading from OSC.
-
-  if(!mpFrameBuf) return;
-
-  constexpr float kZThresh = 0.00001f;
-
-  // read from mpFrameBuf, which is being filled up by OSC listener thread
-  // we can't simply throw away any frames because they may contain note-ons or note-offs
-  while (mpFrameBuf->elementsAvailable() > 0)
-  {
-    (mpFrameBuf->pop(mLatestTouchFrame));
-
-    mLatestTouchFrameSorted = mLatestTouchFrame;
-    std::sort(mLatestTouchFrameSorted.begin(), mLatestTouchFrameSorted.end(), [&](Touch t, Touch u){ return t.z > u.z; });
-
-    // check for stuck notes
-    // TODO improve this at Source! Don't send duplicates or something
-
-    float zSum{};
-    for (int v=0; v<mCurrentVoices; ++v)
-    {
-      //std::cout << mLatestTouchFrameSorted[v].z << " ";
-      zSum += mLatestTouchFrameSorted[v].z;
-    }
-
-    if (zSum == mPreviousMaxZ) // check for any changes, not strictly correct
-    {
-      mNullFrameCounter++;
-    }
-    else
-    {
-      mPreviousMaxZ = zSum;
-      mNullFrameCounter = 0;
-    }
-
-    //std::cout << " null: " << mNullFrameCounter << "\n";
-
-    if(mNullFrameCounter < kTimeOut) // MLTEST
-    {
-      for (int v=0; v<mCurrentVoices; ++v)
-      {
-        Touch t = mUnisonMode ? mLatestTouchFrameSorted[0] : mLatestTouchFrameSorted[v];
-
-        dx = 0.;
-        dy = 0.;
-
-        if (t.z > 0.f)
-        {
-          if (mVoices[v].mZ1 <= kZThresh)
-          {
-            // process note on
-            mVoices[v].mStartX = t.x;
-            mVoices[v].mStartY = t.y;
-            mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
-
-            // start velocity is sent as first z value over t3d
-            mVoices[v].mStartVel = VelocityFromInitialZ(t.z);
-            dx = 0.f;
-            dy = 0.f;
-          }
-          else
-          {
-            // note continues
-            mVoices[v].mPitch = mScale.noteToLogPitch(t.note);
-            dx = t.x - mVoices[v].mStartX;
-            dy = t.y - mVoices[v].mStartY;
-          }
-          mVoices[v].mX1 = t.x;
-          mVoices[v].mY1 = t.y;
-        }
-        else
-        {
-          if (mVoices[v].mZ1 > kZThresh)
-          {
-            // process note off, set pitch for release
-            t.x = mVoices[v].mX1;
-            t.y = mVoices[v].mY1;
-          }
-        }
-
-        mVoices[v].mZ1 = t.z;
-
-        const int frameTime = 1;
-        mVoices[v].mdPitch.addChange(mVoices[v].mPitch, frameTime);
-        mVoices[v].mdGate.addChange((int)(t.z > kZThresh), frameTime);
-        mVoices[v].mdVel.addChange(mVoices[v].mStartVel, frameTime);
-        mVoices[v].mdAmp.addChange(t.z, frameTime);
-
-        mVoices[v].mdNotePressure.addChange(dx, frameTime);
-        mVoices[v].mdMod.addChange(dy, frameTime);
-        mVoices[v].mdMod2.addChange(t.x*2.f - 1.f, frameTime);
-        mVoices[v].mdMod3.addChange(t.y*2.f - 1.f, frameTime);
-      }
-    }
-    else if (mNullFrameCounter == kTimeOut)
-    {
-      clear();
-    }
-    // else do nothing
-  }
+  mVectorStartTime = t;
+//  std::cout << "vst: " << t << "\n";
 }
-*/
 
 // process control events to make change lists
 //
@@ -791,12 +698,12 @@ void MLProcInputToSignals::processEvents()
   if(mEventQueue)
   {
     auto n = mEventQueue->elementsAvailable();
+ //   std::cout << "processEvents: " << n << " elems, time: " << mVectorStartTime << "\n";
+
     for(int i=0; i<n; ++i)
     {
       MLControlEvent e = mEventQueue->peek();
       uint64_t eventTimeInVector = e.mTime - mVectorStartTime;
-      
-      // std::cout << "time: " << eventTimeInVector << "\n";
       
       if(eventTimeInVector < kFloatsPerDSPVector)
       {
@@ -824,6 +731,9 @@ void MLProcInputToSignals::processEvent(const MLControlEvent &eventParam)
       break;
     case MLControlEvent::kNoteOff:
       doNoteOff(event);
+      break;
+    case MLControlEvent::kNoteUpdate:
+      doNoteUpdate(event);
       break;
     case MLControlEvent::kController:
       doController(event);
@@ -853,7 +763,6 @@ void MLProcInputToSignals::doNoteOn(const MLControlEvent& event)
   if(freeEventIdx < 0) return;
   mNoteEventsPlaying[freeEventIdx] = event;
 
-  int v, chan;
   if(mUnisonMode)
   {
     // push any event previously occupying voices to pending stack
@@ -871,24 +780,9 @@ void MLProcInputToSignals::doNoteOn(const MLControlEvent& event)
   }
   else
   {
-    switch(mProtocol)
-    {
-      // FIX
-        
-      case kInputProtocolMIDI:
-        v = findFreeVoice(0, mCurrentVoices);
-        break;
-      case kInputProtocolMIDI_MPE:
-        v = findFreeVoice(0, mCurrentVoices);
-        break;
-      case kInputProtocolOSC:
-        v = findFreeVoice(0, mCurrentVoices);
-        break;
-    }
+    auto v = findFreeVoice(0, mCurrentVoices);
     if(v >= 0)
     {
-      
-      std::cout << "    voice" << v << "\n";
       mVoices[v].addNoteEvent(event, mScale);
     }
     else
@@ -976,10 +870,22 @@ void MLProcInputToSignals::doNoteOff(const MLControlEvent& event)
             voice.addNoteEvent(eventToSend, mScale);
           }
         }
-
         break;
       }
+    }
+  }
+}
 
+// update multiple axes of control for a held note event.
+void MLProcInputToSignals::doNoteUpdate(const MLControlEvent& event)
+{
+  int instigator = event.mID;
+  for(int v=0; v<mCurrentVoices; ++v)
+  {
+    MLVoice& voice = mVoices[v];
+    if((voice.mInstigatorID == instigator) && (voice.mState == MLVoice::kOn))
+    {
+      mVoices[v].addNoteEvent(event, mScale);
     }
   }
 }
@@ -1013,9 +919,9 @@ void MLProcInputToSignals::doController(const MLControlEvent& event)
   int chan = event.mChannel;
   float val = event.mValue2;
   
-
   switch(mProtocol)
   {
+      // note: this is for MIDI. OSC controller changes are handled through doNoteUpdate()
     case kInputProtocolMIDI:
     {
       if(ctrl == 120)
@@ -1090,12 +996,14 @@ void MLProcInputToSignals::doController(const MLControlEvent& event)
         else
         {
           // TODO add parameter for x cc
-          if (ctrl == 73) // x always 73
+          if (ctrl == mControllerMPEXNumber) // x for MPE input, default 73
             mMPEMainVoice.mdMod2.addChange(val, time);
           else if (ctrl == 74) // y always 74
             mMPEMainVoice.mdMod3.addChange(val, time);
           else if(ctrl == mControllerNumber)
+          {
             mMPEMainVoice.mdMod.addChange(val, time);
+          }
         }
       }
       else // modulate voices matching instigator
@@ -1105,7 +1013,7 @@ void MLProcInputToSignals::doController(const MLControlEvent& event)
           MLVoice& voice = mVoices[v];
           if((voice.mInstigatorID == instigator) && (voice.mState == MLVoice::kOn))
           {
-            if (ctrl == 73) // x always 73
+            if (ctrl == mControllerMPEXNumber) // x for MPE input, default 73
               mVoices[v].mdMod2.addChange(val, time);
             else if (ctrl == 74) // y always 74
               mVoices[v].mdMod3.addChange(val, time);
@@ -1330,8 +1238,12 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
         mod3.add(mMainMod3Signal);
 
         // over MPE, we can make bipolar x and y signals to match the OSC usage.
-        mod2.scale(2.0f);
-        mod2.add(-1.0f);
+        // only center the x controller if the controller number being used is the default.
+        if(mControllerMPEXNumber == 73)
+        {
+          mod2.scale(2.0f);
+          mod2.add(-1.0f);
+        }
         mod3.scale(2.0f);
         mod3.add(-1.0f);
       }

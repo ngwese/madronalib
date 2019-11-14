@@ -42,6 +42,7 @@ void MLProcHostPhasor::doParams(void)
 	mParamsChanged = false;
 }
 
+// set input parameters from host info
 void MLProcHostPhasor::setTimeAndRate(const double secs, const double ppqPos, const double bpm, bool isPlaying)
 {
 	// working around a bug I can't reproduce, so I'm covering all the bases.
@@ -53,7 +54,7 @@ void MLProcHostPhasor::setTimeAndRate(const double secs, const double ppqPos, co
 		return;
 	}
 	
-	////debug() << "setTimeAndRate: secs " << secs << " ppq: " << ppqPos << " is playing: " << isPlaying << "\n";
+	// debug() << "setTimeAndRate: secs " << secs << " ppq: " << ppqPos << " playing: " << isPlaying << " phase: " << mPhase1 << " dp: " << mDpDt << "\n" ;
 	
 	double phase = 0.;
 	double newTime = ml::clamp(ppqPos, 0., 100000.);
@@ -98,6 +99,7 @@ void MLProcHostPhasor::clear()
 	mPlaying = 0;
 }
 
+// generate a quarter-note phasor from the input parameters
 void MLProcHostPhasor::process()
 {	
 	if (mParamsChanged) 

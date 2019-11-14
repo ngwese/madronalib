@@ -110,7 +110,7 @@ public:
   void clearChangeLists();
   void doParams();
   
-  void setVectorStartTime(uint64_t t) { mVectorStartTime = t; }
+  void setVectorStartTime(uint64_t t);
   
 private:
 
@@ -122,6 +122,7 @@ private:
   void processEvent(const MLControlEvent& event);
   void doNoteOn(const MLControlEvent& event);
   void doNoteOff(const MLControlEvent& event);
+  void doNoteUpdate(const MLControlEvent& event);
   void doSustain(const MLControlEvent& event);
   void doController(const MLControlEvent& event);
   void doPitchWheel(const MLControlEvent& event);
@@ -167,6 +168,8 @@ private:
   int mEventTimeOffset;
   
   int mControllerNumber;
+  int mControllerMPEXNumber; 
+  
   int mCurrentVoices;
   int mDriftCounter;
   int mEventCounter;

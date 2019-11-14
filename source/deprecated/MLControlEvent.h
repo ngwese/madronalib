@@ -24,6 +24,7 @@ public:
     kNull = 0,
     kNoteOff,
     kNoteOn,
+    kNoteUpdate, // OSC messages can update all controllers at once
     kNoteSustain, // when sustain pedal is held, key releases generate sustain events
     kController,
     kPitchWheel,
@@ -34,7 +35,7 @@ public:
   };
   
   MLControlEvent();
-  MLControlEvent(EventType type, int channel, int id, uint64_t time, float value, float value2);
+  MLControlEvent(EventType type, int channel, int id, uint64_t time, float value, float value2, float v3 = 0., float v4 = 0.);
 	
 	explicit operator bool() const { return mType != kNull; }
 
@@ -55,6 +56,8 @@ public:
   
   float mValue1;
   float mValue2;
+  float mValue3;
+  float mValue4;
 };
 
 const MLControlEvent kMLNullControlEvent{};
