@@ -33,6 +33,12 @@ MLPublishedParam::MLPublishedParam(const ml::Path & procPath, const ml::Symbol n
 	{
 		mType = type;
 	}
+  
+  if(mType != "float")
+  {
+    setAutomatable(false);
+  }
+  
 }
 
 MLPublishedParam::~MLPublishedParam() 
