@@ -243,17 +243,16 @@ void MLAppState::setStateFromJSON(cJSON* pNode, int depth)
 	{
 		ml::Symbol key(child->string);
     
-    debug() << "key: " << key << "\n";
 		if(mIgnoredProperties.find(key) == mIgnoredProperties.end())
 		{							
 			switch(child->type & 255)
 			{
 				case cJSON_Number:
-debug() << " depth " << depth << " loading float param " << child->string << " : " << child->valuedouble << "\n";
+          //debug() << " depth " << depth << " loading float param " << child->string << " : " << child->valuedouble << "\n";
 					mpTarget->setProperty(key, (float)child->valuedouble);
 					break;
 				case cJSON_String:
-debug() << " depth " << depth << " loading string param " << child->string << " : " << child->valuestring << "\n";
+          //debug() << " depth " << depth << " loading string param " << child->string << " : " << child->valuestring << "\n";
 
 					mpTarget->setProperty(key, child->valuestring);
 					break;

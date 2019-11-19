@@ -129,7 +129,7 @@ protected:
 private:
 	std::map<ml::Symbol, MLProperty> mProperties;
 	std::list<MLPropertyListener*> mpListeners;
-	bool mAllowNewProperties;
+  bool mAllowNewProperties{true};
 	
 };
 
