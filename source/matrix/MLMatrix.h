@@ -586,6 +586,8 @@ public:
 	{
 		return reinterpret_cast<const int32_t*>(mDataAligned);
 	}
+    
+    /*
 	__m128* asM128Ptr(void) const
 	{
 		return reinterpret_cast<__m128*>(mDataAligned);
@@ -602,7 +604,8 @@ public:
 	{
 		return reinterpret_cast<const __m128i*>(mDataAligned);
 	}
-	
+	*/
+    
 	// helper functions
 	static Matrix copyWithLoopAtEnd(const Matrix& src, int loopLength);
 	
