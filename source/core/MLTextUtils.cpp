@@ -7,7 +7,7 @@
 //
 
 #include "MLTextUtils.h"
-#include "MLScalarMath.h"
+#include "MLDSPScalarMath.h"
 #include "MLMemoryUtils.h"
 
 #include "utf.hpp"

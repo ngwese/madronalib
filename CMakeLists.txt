@@ -1,11 +1,20 @@
 # madronalib/CMakeLists.txt
 # root CMake file for madronalib project.
 
-export MACOSX_DEPLOYMENT_TARGET=10.7
 
-project(madronalib CXX)
+
+#--------------------------------------------------------------------
+# set min version and deployment target -- before project
+#--------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 2.8.12)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Minimum OS X deployment version")
+
+#--------------------------------------------------------------------
+# project and version
+#--------------------------------------------------------------------
+
+project(madronalib) 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 

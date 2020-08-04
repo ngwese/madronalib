@@ -26,6 +26,7 @@ set(NEW_SOURCES
     core/MLTimer.cpp
     core/MLPath.cpp       
     core/MLResourceMap.h  
+    core/MLSharedResource.h  
     core/MLText.h         
     core/MLTimer.h
 
@@ -39,7 +40,6 @@ set(NEW_SOURCES
     DSP/MLDSPMathNEON.h
     DSP/MLDSPMathSSE.h
     DSP/MLDSPMathScalar.h
-    DSP/MLDSPOps.cpp
     DSP/MLDSPOps.h
     DSP/MLDSPUtils.h
     DSP/MLProjection.cpp
@@ -47,8 +47,7 @@ set(NEW_SOURCES
     DSP/MLRatio.cpp
     DSP/MLRatio.h
     DSP/MLScalarConstants.h
-    DSP/MLScalarMath.cpp
-    DSP/MLScalarMath.h
+    DSP/MLDSPScalarMath.h
 
     matrix/MLInterpolator.cpp
     matrix/MLInterpolator.h

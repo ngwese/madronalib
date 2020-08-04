@@ -14,7 +14,7 @@ using namespace std::chrono;
 #include "catch.hpp"
 #include "../include/madronalib.h"
 #include "MLQueue.h"
-#include "MLScalarMath.h"
+#include "MLDSPScalarMath.h"
 
 struct TestEvent
 {
