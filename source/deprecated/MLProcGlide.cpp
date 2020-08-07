@@ -5,6 +5,8 @@
 
 #include "MLProc.h"
 
+using namespace ml;
+
 // ----------------------------------------------------------------
 // class definition
 

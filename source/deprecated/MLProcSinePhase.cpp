@@ -6,6 +6,8 @@
 #include "MLProc.h"
 #include "xmmintrin.h"
 
+using namespace ml;
+
 // ----------------------------------------------------------------
 // class definition
 

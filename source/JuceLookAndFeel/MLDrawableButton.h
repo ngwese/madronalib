@@ -9,24 +9,25 @@
 #include "MLUI.h"
 #include "MLButton.h"
 
-class  MLDrawableButton : 
-	public MLButton
+class  MLDrawableButton :
+public MLButton
 {
 public:
-
-    MLDrawableButton(MLWidget* pContainer);
-    ~MLDrawableButton();
-
-	void paint (Graphics& g);
- 	void setImage (const Drawable* img);
-	void resizeWidget(const MLRect& b, const int);
-
+  
+  MLDrawableButton(MLWidget* pContainer);
+  ~MLDrawableButton();
+  
+  void paint (Graphics& g);
+  void setImage (const Drawable* img);
+  void resizeWidget(const MLRect& b, const int);
+  
 private:
-    //==============================================================================
-    ScopedPointer <Drawable> normalImage;
-    Colour backgroundOff, backgroundOn, backgroundHover, mGlowColor;
-	
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MLDrawableButton);
+  //==============================================================================
+  ScopedPointer <Drawable> normalImage;
+  Colour backgroundOff, backgroundOn, backgroundHover, mGlowColor;
+  
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MLDrawableButton);
 };
 
 #endif   // __ML_DRWBL_BUTTON_HEADER__
+

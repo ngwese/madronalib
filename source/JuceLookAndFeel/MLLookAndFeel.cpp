@@ -97,10 +97,10 @@ MLLookAndFeel::MLLookAndFeel()
 	mNumbersFont.setExtraKerningFactor(0.04f);
 
 	mDrawNumbers = true;	// default
-    sendMLColorsToJUCE();
+  sendMLColorsToJUCE();
 	
 	bool clearIt = true;
-	mBackgroundImage = Image(Image::ARGB, 640, 480, clearIt);
+	mBackgroundImage = Image(MLImageFormatColor, 640, 480, clearIt, MLImageType());
 
 }
 
@@ -186,7 +186,8 @@ bool MLLookAndFeel::getDefaultOpacity()
 }
 
 bool MLLookAndFeel::getDefaultBufferMode() 
-{ 
+{
+  // MLTEST
 	return true;
 }
 
@@ -2018,15 +2019,35 @@ void MLLookAndFeel::makeBackgroundImage(MLRect bounds, MLRect borderRect)
 {	
 	if (mGradientMode < 2)
 	{
+    
+    int w = bounds.width();
+    int h = bounds.height();
+    
 		// allocate image
 		bool clearIt = false;
 
-		mBackgroundImage = Image(Image::ARGB, bounds.width(), bounds.height(), clearIt);
+		mBackgroundImage = Image(MLImageFormatColor, w, h, clearIt, MLImageType());
 		Graphics bg(mBackgroundImage);
 		
 		// draw background
 		setBackgroundGradient(bg, bounds, borderRect);
 		bg.fillAll();
+    
+    if(0)
+    {
+    // MLTEST
+    int gridSize = 30;
+    bg.setColour(Colours::blue);
+    for(int i=0; i<h; i += gridSize)
+    {
+      bg.drawLine(0, i, w, i);
+    }
+    for(int j=0; j<w; j += gridSize)
+    {
+      bg.drawLine(j, 0, j, h);
+    }
+    }
+    
 	}
 	else
 	{
@@ -2036,6 +2057,7 @@ void MLLookAndFeel::makeBackgroundImage(MLRect bounds, MLRect borderRect)
 	}
 }
 
+
 void MLLookAndFeel::setBackgroundGradient(Graphics& g, MLRect bounds, MLRect borderRect)
 {
 	Colour c1 = findColour (MLLookAndFeel::backgroundColor2);
@@ -2044,8 +2066,8 @@ void MLLookAndFeel::setBackgroundGradient(Graphics& g, MLRect bounds, MLRect bor
 	if (mGradientMode < 2)
 	{
 		ColourGradient cg;
-		cg.point1 = Point<float>(0, borderRect.top());
-		cg.point2 = Point<float>(0, borderRect.bottom());
+		cg.point1 = juce::Point<float>(0, borderRect.top());
+		cg.point2 = juce::Point<float>(0, borderRect.bottom());
 		cg.isRadial = false;
 		switch(mGradientMode)
 		{
@@ -2075,17 +2097,38 @@ void MLLookAndFeel::setBackgroundGradient(Graphics& g, MLRect bounds, MLRect bor
 //
 // (should be drawWidgetBackground)
 void MLLookAndFeel::drawBackground(Graphics& g, MLWidget* pW)
-{		
-	drawBackgroundRect(g, pW, pW->getWidgetLocalBounds());
+{
+  auto b = pW->getWidgetBounds();
+  
+  g.setOpacity(1.0f);
+  
+  juce::Component* pC = pW->getComponent();
+  juce::CachedComponentImage* cachedImage = pC->getCachedComponentImage();
+
+  if(cachedImage != nullptr)
+  {
+    drawBackgroundRect(g, pW, pW->getWidgetLocalBounds());
+  }
+  else
+  {
+    drawBackgroundRect(g, pW, pW->getWidgetBounds());
+    
+    g.fillAll(Colours::lightyellow);
+  }
 }
 
 // used by dial numbers to draw a rect of a background gradient 
 // dest rect is local to the current widget
 void MLLookAndFeel::drawBackgroundRect(Graphics& g, MLWidget* pW, MLRect destRect)
 {
-	MLPoint windowOffset = pW->getWidgetBoundsInWindow().getTopLeft();
+  
+  // NOTE this is unused and still wrong due to the window border, I think.
+  // There is also an issue with cached image colrs not matching the color space.
+  MLPoint windowOffset = pW->getWidgetBoundsInWindow().getTopLeft();
+//  MLPoint windowOffset = pW->getWidgetBounds().getTopLeft();
+  
 	MLRect sourceRect = destRect;
-	sourceRect.translate(windowOffset);
+  sourceRect.translate(windowOffset);
 	
 	// tile source horizontally, a hack for making scrolling pages work.
 	int windowWidth = pW->getTopLevelWindowBounds().width();
@@ -2101,12 +2144,16 @@ void MLLookAndFeel::drawBackgroundRect(Graphics& g, MLWidget* pW, MLRect destRec
 	// get background image from r2, blit to r.
 	// note that offscreen destRect will be moved onscreen by drawImage(), not clipped! aarrrgh.
 	// so we have to have drawEntireBackground as well.
-	g.setOpacity(1.0f);
-	g.drawImage (mBackgroundImage,
-					destRect.left(), destRect.top(), destRect.width(), destRect.height(),
-					sourceRect.x(), sourceRect.y(), sourceRect.width(), sourceRect.height());
-	
+  
 
+	g.setOpacity(1.0f);
+  
+	g.drawImage (mBackgroundImage,
+               destRect.left(), destRect.top(), destRect.width(), destRect.height(),
+               sourceRect.x(), sourceRect.y(), sourceRect.width(), sourceRect.height());
+  
+
+  //g.drawImageTransformed(mBackgroundImage,
 }
 
 // used by app border
@@ -2121,6 +2168,7 @@ void MLLookAndFeel::drawEntireBackground(Graphics& g, MLRect border)
 	}
 	else
 	{
+      g.setOpacity(1.0f);
 //		g.fillAll(Colours::green);
 		g.drawImageAt (mBackgroundImage, 0, 0, fillAlphaChannel);
 	}

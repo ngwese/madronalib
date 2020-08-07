@@ -8,6 +8,8 @@
 #include "MLDSP.h"
 #include "MLSignal.h"
 
+using namespace ml;
+
 // RESEARCH
 // We are really reinventing wavelets here, in a sense.  So a
 // wavelet-based or similar analytic description 

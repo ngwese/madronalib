@@ -1067,9 +1067,9 @@ void MLDial::drawRotaryDial (Graphics& g, int rx, int ry, int rw, int rh, float 
 		if (myLookAndFeel->mDrawNumbers && mDoNumber && !hide)
 		{
 			// draw background under text
-			if (!isOpaque())
-				myLookAndFeel->drawBackgroundRect(g, this, mRotaryTextRect);
-			
+//			if (!isOpaque())
+	//			myLookAndFeel->drawBackgroundRect(g, this, mRotaryTextRect);
+		// MLTEST
 			float textSize = mTextSize;
 			float op = isEnabled() ? 1.f : 0.4f;
 			const char* numBuf = myLookAndFeel->formatNumber(getFloatProperty("value"), mDigits, mPrecision, mDoSign, mValueDisplayMode);
@@ -1180,7 +1180,7 @@ void MLDial::restoreMouseIfHidden()
         for (int i = Desktop::getInstance().getNumMouseSources(); --i >= 0;)
             Desktop::getInstance().getMouseSource(i)->enableUnboundedMouseMovement (false);
 
-        Point<int> mousePos;
+        juce::Point<int> mousePos;
 		mousePos = Desktop::getLastMouseDownPosition();
         Desktop::setMousePosition (mousePos);
     }
@@ -2164,13 +2164,13 @@ void MLDial::resizeWidget(const MLRect& b, const int u)
 			int compWidth = getWidth();
 			int compHeight = getHeight();
       
-			mParameterImage = Image(Image::ARGB, compWidth + 1, compHeight + 1, true, NativeImageType());
+			mParameterImage = Image(MLImageFormatColor, compWidth + 1, compHeight + 1, true, MLImageType());
 			mParameterImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);
       
-			mThumbImage = Image(Image::ARGB, compWidth + 1, compHeight + 1, true, NativeImageType());
+			mThumbImage = Image(MLImageFormatColor, compWidth + 1, compHeight + 1, true, MLImageType());
 			mThumbImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);
       
-			mStaticImage = Image(Image::ARGB, compWidth*displayScale + 1, compHeight*displayScale + 1, true, NativeImageType());
+			mStaticImage = Image(MLImageFormatColor, compWidth*displayScale + 1, compHeight*displayScale + 1, true, MLImageType()); // MLImageType DEBUG
 			mStaticImage.clear(Rectangle<int>(0, 0, compWidth, compHeight), Colours::transparentBlack);
 		}
 		

@@ -8,7 +8,7 @@
 #include "MLAppView.h"
 
 MLTextButton::MLTextButton(MLWidget* pContainer)
-    : MLButton (pContainer)
+: MLButton (pContainer)
 {
 }
 
@@ -18,26 +18,27 @@ MLTextButton::~MLTextButton()
 
 void MLTextButton::paint(Graphics& g)
 {
-	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
-	myLookAndFeel->drawBackground(g, this);
-	const Colour c (findColour (MLTextButton::buttonColourId));	
-	const Colour t (findColour (MLTextButton::textColourId));	
-    myLookAndFeel->drawButtonBackground(g, *this, c, mOver, mDown, mLineThickness);
-	myLookAndFeel->drawButtonText(g, *this, t, mOver, mDown);
+  MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
+  myLookAndFeel->drawBackground(g, this);
+  const Colour c (findColour (MLTextButton::buttonColourId));
+  const Colour t (findColour (MLTextButton::textColourId));
+  myLookAndFeel->drawButtonBackground(g, *this, c, mOver, mDown, mLineThickness);
+  myLookAndFeel->drawButtonText(g, *this, t, mOver, mDown);
 }
 
 void MLTextButton::doPropertyChangeAction(ml::Symbol property, const MLProperty& val)
 {
-	if (property == "text")
-	{
-		// this is needed because of MLMenuButton's file name stripping. see "strip" .
-		// maybe not such a good design for that feature.
-		setProperty("processed_text", val);
-		repaint();
-	}
-	else
-	{
-		MLButton::doPropertyChangeAction(property, val);
-	}
+  if (property == "text")
+  {
+    // this is needed because of MLMenuButton's file name stripping. see "strip" .
+    // maybe not such a good design for that feature.
+    setProperty("processed_text", val);
+    repaint();
+  }
+  else
+  {
+    MLButton::doPropertyChangeAction(property, val);
+  }
 }
+
 

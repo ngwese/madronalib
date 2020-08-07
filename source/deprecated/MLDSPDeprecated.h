@@ -10,7 +10,7 @@
 
 #include "MLProc.h"
 #include "MLSignal.h"
-#include "MLScalarMath.h"
+#include "MLDSPScalarMath.h"
 using namespace ml;
 
 #include <cassert>

@@ -5,6 +5,7 @@
 
 #include "MLProcMatrix.h"
 
+using namespace ml;
 // ----------------------------------------------------------------
 // registry section
 

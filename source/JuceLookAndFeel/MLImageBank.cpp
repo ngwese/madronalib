@@ -4,6 +4,7 @@
 // Distributed under the MIT license: http://madrona-labs.mit-license.org/
 
 #include "MLImageBank.h"
+#include "MLLookAndFeel.h"
 
 MLImageBank::MLImageBank() : mWidth(0), mHeight(0), mNumImages(0) {};
 
@@ -18,8 +19,8 @@ void MLImageBank::buildImages()
 	{
 		for(unsigned i=0; i<mNumImages; ++i)
 		{
-            Image newImage(Image::ARGB, mWidth + 1, mHeight + 1, true, NativeImageType());
-            newImage.clear(Rectangle<int>(0, 0, mWidth + 1, mHeight + 1), Colours::transparentBlack);
+      Image newImage(MLImageFormatColor, mWidth + 1, mHeight + 1, true, NativeImageType());
+      newImage.clear(Rectangle<int>(0, 0, mWidth + 1, mHeight + 1), Colours::transparentBlack);
 			mImages.push_back(newImage);
 		}	
 	}

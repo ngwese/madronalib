@@ -39,6 +39,11 @@ typedef std::shared_ptr<Drawable> DrawablePtr;
 const float kPopupMenuTextScale = 0.85f;
 const int kBackgroundBorder = 32;
 
+using MLImageType = NativeImageType;
+#define MLImageFormatColor Image::ARGB
+#define MLImageFormatMonochrome Image::SingleChannel
+
+
 class MLLookAndFeel : public LookAndFeel_V3 // MLTEST , public DeletedAtShutdown
 {
 public:

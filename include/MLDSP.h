@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "MLDSPScalarMath.h"
 #include "MLDSPOps.h"
 #include "MLDSPFilters.h"
 #include "MLDSPGens.h"

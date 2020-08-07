@@ -23,9 +23,10 @@ mSizeMultiplier(1.0f)
 	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
 	
 	// labels are always opaque for better text rendering
-	setOpaque(true);
-	
-	setBufferedToImage(false);//(myLookAndFeel->getDefaultBufferMode());
+  //setOpaque(true);
+  setOpaque(myLookAndFeel->getDefaultOpacity());
+
+	setBufferedToImage(myLookAndFeel->getDefaultBufferMode());
 	setPaintingIsUnclipped(myLookAndFeel->getDefaultUnclippedMode());
 	
 	setRepaintsOnMouseActivity (false);
@@ -89,7 +90,8 @@ void MLLabel::paint (Graphics& g)
 	const Colour bc (findColour (backgroundColourId));
 	float alpha = isEnabled() ? 1. : 0.25f;
 	
-	myLookAndFeel->drawBackground(g, this);
+  if(isOpaque())
+    myLookAndFeel->drawBackground(g, this);
 	
 	// we are in local coords with the origin at the widget's top left
 	// myLookAndFeel->drawUnitGrid(g, this);

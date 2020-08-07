@@ -20,9 +20,10 @@ MLButton::MLButton (MLWidget* pContainer, const String label) :
 	MLWidget::setComponent(this);
     setWantsKeyboardFocus (false);
     setRepaintsOnMouseActivity (false);
-	setOpaque(true);
+  
 	
 	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
+  setOpaque(myLookAndFeel->getDefaultOpacity());
 	setBufferedToImage(myLookAndFeel->getDefaultBufferMode());
 	
 	setProperty("toggle", true);

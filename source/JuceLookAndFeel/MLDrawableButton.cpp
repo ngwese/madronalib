@@ -8,11 +8,11 @@
 #include "MLAppView.h"
 
 
-MLDrawableButton::MLDrawableButton (MLWidget* pContainer) : 
-    MLButton (pContainer)
+MLDrawableButton::MLDrawableButton (MLWidget* pContainer) :
+MLButton (pContainer)
 {
-	backgroundOff = Colours::transparentBlack;
-	backgroundOn = findColour(MLLookAndFeel::backgroundColor);
+  backgroundOff = Colours::transparentBlack;
+  backgroundOn = findColour(MLLookAndFeel::backgroundColor);
 }
 
 MLDrawableButton::~MLDrawableButton()
@@ -22,42 +22,49 @@ MLDrawableButton::~MLDrawableButton()
 //==============================================================================
 void MLDrawableButton::setImage (const Drawable* img)
 {
-    jassert (img != 0); 
-    if (img)        
-	{
-		normalImage = img->createCopy();
-	}
+  jassert (img != 0);
+  if (img)
+  {
+    normalImage = img->createCopy();
+  }
 }
 
 void MLDrawableButton::paint (Graphics& g)
-{ 
- 	MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
-    Rectangle<int> imageSpace = getLocalBounds();
-	if (isOpaque()) myLookAndFeel->drawBackground(g, this);
-	const Colour c (findColour (TextButton::buttonColourId));
-	
-	float u = myLookAndFeel->getGridUnitSize();
-	if (mDown)
-	{
-		imageSpace.translate(0, u/32.);
-	}			  
-	
-	normalImage->setTransformToFit (imageSpace.toFloat(), RectanglePlacement::centred);
-	normalImage->drawAt(g, 0, 0, 1.);
+{
+  // MLTEST
+//  g.fillAll(Colours::aqua);
+//  return;
+  
+  MLLookAndFeel* myLookAndFeel = (&(getRootViewResources(this).mLookAndFeel));
+  Rectangle<int> imageSpace = getLocalBounds();
+  
+  if(isOpaque())
+    myLookAndFeel->drawBackground(g, this);
+  
+  const Colour c (findColour (TextButton::buttonColourId));
+  
+  float u = myLookAndFeel->getGridUnitSize();
+  if (mDown)
+  {
+    imageSpace.translate(0, u/32.);
+  }
+  
+  normalImage->setTransformToFit (imageSpace.toFloat(), RectanglePlacement::centred);
+  normalImage->drawAt(g, 0, 0, 1.);
 }
 
 //==============================================================================
 
 void MLDrawableButton::resizeWidget(const MLRect& b, const int u)
 {
-    MLButton::resizeWidget(b, u);
-	Component* pC = getComponent();
-	if(pC)
-	{
-		// adapt vrect to juce rect
-		Rectangle<int> c(b.left(), b.top(), b.width(), b.height());
-
-		pC->setBounds(c);
-	}
+  MLButton::resizeWidget(b, u);
+  Component* pC = getComponent();
+  if(pC)
+  {
+    // adapt vrect to juce rect
+    Rectangle<int> c(b.left(), b.top(), b.width(), b.height());
+    pC->setBounds(c);
+  }
 }
+
 
