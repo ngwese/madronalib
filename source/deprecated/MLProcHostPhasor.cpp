@@ -68,6 +68,11 @@ void MLProcHostPhasor::setTimeAndRate(const double secs, const double ppqPos, co
 
     if(justStarted)
     {
+      // just start at 0 and don't attempt to match the playhead position.
+      // this works well when we start at any 1/4 note.
+      // there is still some weirdness when we try to lock onto other 16ths.
+      mOmega = 0.;
+      // std::cout << "phasor START: " << mOmega << "\n";
       mDpDt = 0.;
     }
     else
