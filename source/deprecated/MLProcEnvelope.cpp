@@ -28,7 +28,7 @@ private:
 	MLSample mSustain;
 	MLSample mCAttack, mCDecay, mCSustain, mCRelease, mCNull; // coeffs
 	MLSample mX;	// input to filter
-	MLSample mGate1, mEnv, mY1; // history
+  MLSample mGate1{0}, mEnv, mY1; // history
 	MLSample mMult;	// output multiply by gate amp if xvel is on, or 1 if xvel is off
 	MLSample* mpEnvCoeff; // points to current step being used
 	
@@ -72,7 +72,8 @@ void MLProcEnvelope::clear()
 	// //debug() << "MLProcEnvelope::clear()\n";
 	mEnvThresh = 1.f;
 	mpEnvCoeff = &mCNull; 
-	mX = mGate1 = mEnv = mY1 = 0.f;
+  mX = mEnv = mY1 = 0.f;
+  // MLTEST don't reset gate1 mX = mGate1 = mEnv = mY1 = 0.f;
 	mDelayCounter = mDelayCounterStep = mDelayStep = 0.f;
 	mRepeatCounter = mRepeatStep = 0.f;
 	mCAttack = mCDecay = mCSustain = mCRelease = mCNull = 0.f;

@@ -27,17 +27,18 @@ public:
 private:
 	MLProcInfo<MLProcHostPhasor> mInfo;
 	void doParams(void);
-	MLSample mOmega;
-	MLSample mdOmega;
-	double mTime;
-	double mRate;
-	bool mPlaying;
-	bool mActive;
+  MLSample mOmega{0};
+
+  
+  bool _playing1{false};
+  bool _active1 {false};
 	//float mSr;
 	
 	double mDpDt;
 	double mPhase1;
-	int mDt;
+	size_t _samplesSincePreviousTime;
+  double _ppqPos1;
+  double _ppqPhase1;
 };
 
 #endif // ML_PROC_HOST_PHASOR_H
