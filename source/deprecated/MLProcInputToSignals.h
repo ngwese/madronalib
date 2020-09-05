@@ -48,6 +48,7 @@ public:
   int mInstigatorID; // for matching event sources, could be MIDI key, or touch number.
   int mNote;
   int mAge;  // time active, measured to the end of the current process buffer
+  int mChannel{0}; // channel that activated this voice -- for MPE
   
   // for continuous touch inputs (OSC)
   float mStartX;
@@ -75,6 +76,8 @@ public:
 
 extern const ml::Symbol voiceSignalNames[];
 
+static constexpr int kMPEInputChannels{16};
+
 class MLProcInputToSignals : public MLProc
 {
 public:
@@ -82,7 +85,7 @@ public:
   static const float kControllerScale;
   static const float kDriftConstantsAmount;
   static const float kDriftRandomAmount;
-	
+  
   MLProcInputToSignals();
   ~MLProcInputToSignals();
   
@@ -113,7 +116,6 @@ public:
   void setVectorStartTime(uint64_t t);
   
 private:
-
   
   //void processOSC(const int n);
   void processEvents();
@@ -153,10 +155,15 @@ private:
 
   // TODO remove these custom container types
   MLControlEventVector mNoteEventsPlaying;    // notes with keys held down and sounding
-  MLControlEventStack mNoteEventsPending;    // notes stolen that may play again when voices are freed
+  
+  // notes stolen that may play again when voices are freed. in unison mode only.
+  MLControlEventStack mNoteEventsPending;
   
   // the usual voices for each channel
   std::vector<MLVoice> mVoices;
+  
+  std::array<MLChangeList, kMPEInputChannels> mPitchBendChangesByChannel;
+  std::array<MLSignal, kMPEInputChannels> mPitchBendSignals;
   
   // a special voice for the MPE "Main Channel"
   // stores main pitch bend and controller inputs, which are added to other voices.

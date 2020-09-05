@@ -92,6 +92,7 @@ void MLVoice::clearState()
   mInstigatorID = 0;
   mNote = 0.;
   mAge = 0;
+  mChannel = 0;
   mStartX = 0.;
   mStartY = 0.;
   mStartVel = 0.;
@@ -177,6 +178,7 @@ void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
       mStartY = e.mValue4;
       mAge = 0;
       mInstigatorID = e.mID;
+      mChannel = e.mChannel;
       break;
       
     case MLControlEvent::kNoteUpdate:
@@ -212,6 +214,9 @@ void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
       // notes are not sending pressure when off
       mdChannelPressure.addChange(0.f, time);
       mAge = 0;
+      
+      // we leave mChannel alone so that pitch bends will retain their values when the note ends
+      
       break;
   }
   
@@ -348,6 +353,12 @@ void MLProcInputToSignals::clearChangeLists()
     mVoices[v].clearChanges();
   }
   mMPEMainVoice.clearChanges();
+  
+  for(auto& c : mPitchBendChangesByChannel)
+  {
+    c.clearChanges();
+  }
+
 }
 
 // set up output buffers
@@ -373,7 +384,7 @@ MLProc::err MLProcInputToSignals::resize()
     mVoices[i].resize(bufSize);
   }
   mMPEMainVoice.resize(bufSize);
-
+  
   // make signals that apply to all voices
   mTempSignal.setDims(vecSize);
   mMainPitchSignal.setDims(vecSize);
@@ -381,7 +392,6 @@ MLProc::err MLProcInputToSignals::resize()
   mMainModSignal.setDims(vecSize);
   mMainMod2Signal.setDims(vecSize);
   mMainMod3Signal.setDims(vecSize);
-
 
   // make outputs
   //
@@ -406,6 +416,13 @@ MLProc::err MLProcInputToSignals::resize()
       mVoices[i].mdPitchBend.addChange(0.f, 0);
       mVoices[i].mdDrift.setGlideTime(kDriftInterval);
     }
+  }
+
+  for(int i = 0; i < kMPEInputChannels; ++i)
+  {
+    mPitchBendChangesByChannel[i].setSampleRate(sr);
+    mPitchBendChangesByChannel[i].setDims(vecSize);
+    mPitchBendSignals[i].setDims(vecSize);
   }
 
   clearChangeLists();
@@ -1058,6 +1075,17 @@ void MLProcInputToSignals::doPitchWheel(const MLControlEvent& event)
       }
       else
       {
+        
+        // save bend by channel
+        mPitchBendChangesByChannel[chan].addChange(bendAdd, event.mTime);
+
+        // in MPE mode, instigator is channel
+        
+        // in MPE mode, keep track of each voice's instigator and
+        // add bend signals to notes on output
+        
+        
+        /*
         // send pitch to all voices matching instigator
         for (int v=0; v<mCurrentVoices; ++v)
         {
@@ -1066,6 +1094,8 @@ void MLProcInputToSignals::doPitchWheel(const MLControlEvent& event)
             mVoices[v].mdPitchBend.addChange(bendAdd, event.mTime);
           }
         }
+        */
+        
       }
       break;
     }
@@ -1156,7 +1186,17 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
     mMPEMainVoice.mdMod2.writeToSignal(mMainMod2Signal, frames);
     mMPEMainVoice.mdMod3.writeToSignal(mMainMod3Signal, frames);
   }
-
+  
+  // get pitch bend input channel signals for MPE
+  if(mProtocol == kInputProtocolMIDI_MPE)
+  {
+    for(int i=0; i < kMPEInputChannels; ++i)
+    {
+      auto& c = mPitchBendChangesByChannel[i];
+      c.writeToSignal(mPitchBendSignals[i], frames);
+    }
+  }
+  
   int maxVoices = getContext()->getRootContext()->getMaxVoices();
   for (int v=0; v<maxVoices; ++v)
   {
@@ -1175,18 +1215,25 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
     {
       // write pitch
       mVoices[v].mdPitch.writeToSignal(pitch, frames);
-
-      // add pitch bend in semitones to pitch
-      mVoices[v].mdPitchBend.writeToSignal(mTempSignal, frames);
-      pitch.add(mTempSignal);
-
-      // in plain MIDI mode, all notes are sent on the same channel,
-      // bend and other controllers are only set from latest voice.
-
-      // add main channel pitch bend for MPE
+      
+    
+      // add pitch bend
       if(mProtocol == kInputProtocolMIDI_MPE)
       {
+        // from MPE main voice
         pitch.add(mMainPitchSignal);
+        
+        // from channel that triggered the voice
+        if(within(mVoices[v].mChannel, 1, kMPEInputChannels))
+        {
+          pitch.add(mPitchBendSignals[mVoices[v].mChannel]);
+        }
+      }
+      else if(mProtocol == kInputProtocolMIDI_MPE)
+      {
+        // add pitch bend in semitones to pitch
+        mVoices[v].mdPitchBend.writeToSignal(mTempSignal, frames);
+        pitch.add(mTempSignal);
       }
 
 #if INPUT_DRIFT
