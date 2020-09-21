@@ -9,6 +9,7 @@ const ml::Symbol data_rateSym("data_rate");
 const ml::Symbol scaleSym("scale");
 const ml::Symbol protocolSym("protocol");
 const ml::Symbol bendSym("bend");
+const ml::Symbol bendMPESym("bend_mpe");
 const ml::Symbol modSym("mod");
 const ml::Symbol modMPEXSym("mod_mpe_x");
 const ml::Symbol unisonSym("unison");
@@ -191,6 +192,7 @@ void MLVoice::addNoteEvent(const MLControlEvent& e, const MLScale& scale)
       // KEY outputs: dy, x, y
       // TODO add UI / settings for relative or absolute options
       mdMod.addChange(e.mValue4 - mStartY, time);
+      
       mdMod2.addChange(e.mValue3*2.f - 1.f, time);
       mdMod3.addChange(e.mValue4*2.f - 1.f, time);
       break;
@@ -264,7 +266,7 @@ void MLVoice::stealNoteEvent(const MLControlEvent& e, const MLScale& scale, bool
 namespace
 {
   MLProcRegistryEntry<MLProcInputToSignals> classReg("midi_to_signals");
-  ML_UNUSED MLProcParam<MLProcInputToSignals> params[11] = { "bufsize", "voices", "bend", "mod", "mod_mpe_x", "unison", "glide", "protocol", "data_rate" , "scale", "master_tune"};
+  ML_UNUSED MLProcParam<MLProcInputToSignals> params[12] = { "bufsize", "voices", "bend", "bend_mpe", "mod", "mod_mpe_x", "unison", "glide", "protocol", "data_rate" , "scale", "master_tune"};
   // no input signals.
   ML_UNUSED MLProcOutput<MLProcInputToSignals> outputs[] = {"*"};  // variable outputs
 }
@@ -418,11 +420,14 @@ MLProc::err MLProcInputToSignals::resize()
     }
   }
 
-  for(int i = 0; i < kMPEInputChannels; ++i)
+  for(auto& c : mPitchBendChangesByChannel)
   {
-    mPitchBendChangesByChannel[i].setSampleRate(sr);
-    mPitchBendChangesByChannel[i].setDims(vecSize);
-    mPitchBendSignals[i].setDims(vecSize);
+    c.setSampleRate(sr);
+    c.setDims(vecSize);
+  }
+  for(auto& c : mPitchBendSignals)
+  {
+    c.setDims(vecSize);
   }
 
   clearChangeLists();
@@ -545,6 +550,11 @@ void MLProcInputToSignals::doParams()
 
   // pitch wheel mult
   mPitchWheelSemitones = getParam(bendSym);
+
+  // pitch wheel mult
+  mPitchWheelSemitonesMPE = getParam(bendMPESym);
+  
+  // std::cout << "MLProcInputToSignals: master bend " << mPitchWheelSemitones << ", MPE bend " << mPitchWheelSemitonesMPE << "\n";
 
   // listen to controller number mods
   mControllerNumber = (int)getParam(modSym);
@@ -767,6 +777,11 @@ void MLProcInputToSignals::processEvent(const MLControlEvent &eventParam)
     case MLControlEvent::kSustainPedal:
       doSustain(event);
       break;
+      /*
+    case MLControlEvent::kPitchBendRange:
+      doPitchBendRange(event);
+      break;
+       */
     case MLControlEvent::kNull:
     default:
       break;
@@ -1052,10 +1067,11 @@ void MLProcInputToSignals::doController(const MLControlEvent& event)
 void MLProcInputToSignals::doPitchWheel(const MLControlEvent& event)
 {
   float val = event.mValue1;
-  float ctr = val - 8192.f;
-  float u = ctr / 8191.f;
-  float bendAdd = u * mPitchWheelSemitones / 12.f;
-  int chan = event.mChannel;
+  float center = val - 8192.f;
+  float bendAmount = center / 8191.f;
+  const float bendScale = mPitchWheelSemitones / 12.f;
+  const float mpeBendScale = mPitchWheelSemitonesMPE / 12.f;
+  int chan = event.mChannel; // JUCE event channels are in range [1, 16]
 
   switch(mProtocol)
   {
@@ -1063,39 +1079,24 @@ void MLProcInputToSignals::doPitchWheel(const MLControlEvent& event)
     {
       for (int i=0; i<mCurrentVoices; ++i)
       {
-        mVoices[i].mdPitchBend.addChange(bendAdd, event.mTime);
+        mVoices[i].mdPitchBend.addChange(bendAmount*bendScale, event.mTime);
       }
       break;
     }
     case kInputProtocolMIDI_MPE:
     {
-      if (chan == 1) // MPE Main Channel
+      if (chan == 1)
       {
-        mMPEMainVoice.mdPitchBend.addChange(bendAdd, event.mTime);
+        // write to MPE Main Channel
+        mMPEMainVoice.mdPitchBend.addChange(bendAmount*bendScale, event.mTime);
       }
       else
       {
-        
-        // save bend by channel
-        mPitchBendChangesByChannel[chan].addChange(bendAdd, event.mTime);
-
-        // in MPE mode, instigator is channel
-        
-        // in MPE mode, keep track of each voice's instigator and
-        // add bend signals to notes on output
-        
-        
-        /*
-        // send pitch to all voices matching instigator
-        for (int v=0; v<mCurrentVoices; ++v)
+        // write to MPE voice channel
+        if(within(chan, 2, kMPEInputChannels + 1))
         {
-          if ((mVoices[v].mInstigatorID == event.mID) && (mVoices[v].mState == MLVoice::kOn))
-          {
-            mVoices[v].mdPitchBend.addChange(bendAdd, event.mTime);
-          }
+          mPitchBendChangesByChannel[chan].addChange(bendAmount*mpeBendScale, event.mTime);
         }
-        */
-        
       }
       break;
     }
@@ -1190,7 +1191,7 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
   // get pitch bend input channel signals for MPE
   if(mProtocol == kInputProtocolMIDI_MPE)
   {
-    for(int i=0; i < kMPEInputChannels; ++i)
+    for(int i=2; i < kMPEInputChannels + 1; ++i)
     {
       auto& c = mPitchBendChangesByChannel[i];
       c.writeToSignal(mPitchBendSignals[i], frames);
@@ -1215,27 +1216,25 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
     {
       // write pitch
       mVoices[v].mdPitch.writeToSignal(pitch, frames);
-      
     
       // add pitch bend
-      if(mProtocol == kInputProtocolMIDI_MPE)
+      if(mProtocol == kInputProtocolMIDI)
       {
-        // from MPE main voice
-        pitch.add(mMainPitchSignal);
-        
-        // from channel that triggered the voice
-        if(within(mVoices[v].mChannel, 1, kMPEInputChannels))
-        {
-          pitch.add(mPitchBendSignals[mVoices[v].mChannel]);
-        }
-      }
-      else if(mProtocol == kInputProtocolMIDI_MPE)
-      {
-        // add pitch bend in semitones to pitch
+        // add voice pitch bend in semitones to pitch
         mVoices[v].mdPitchBend.writeToSignal(mTempSignal, frames);
         pitch.add(mTempSignal);
       }
 
+      else if(mProtocol == kInputProtocolMIDI_MPE)
+      {
+        // add pitch from MPE main voice
+        pitch.add(mMainPitchSignal);
+        
+        if(within(mVoices[v].mChannel, 2, kMPEInputChannels + 1))
+        {
+          pitch.add(mPitchBendSignals[mVoices[v].mChannel]);
+        }
+      }
 #if INPUT_DRIFT
       // write to common temp drift signal, we add one change manually so read offset is 0
       mVoices[v].mdDrift.writeToSignal(mTempSignal, frames);
@@ -1266,7 +1265,7 @@ void MLProcInputToSignals::writeOutputSignals(const int frames)
         case kInputProtocolMIDI_MPE:
           // MPE ignores poly aftertouch.
           mVoices[v].mdChannelPressure.writeToSignal(after, frames);
-          after.add(mMainChannelPressureSignal);
+          //after.add(mMainChannelPressureSignal);
           break;
         case kInputProtocolOSC:
           // write amplitude to aftertouch signal

@@ -108,7 +108,7 @@ inline void MLChangeList::setGlideTarget(float target)
 // 
 void MLChangeList::writeToSignal(MLSignal& y, int frames)
 {
-  	int size = ml::min(y.getWidth(), mValueSignal.getWidth());
+  int size = ml::min(y.getWidth(), mValueSignal.getWidth());
 	size = ml::min(size, frames);
 	int t=0;
 	int changeTime;

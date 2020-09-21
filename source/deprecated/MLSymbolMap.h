@@ -126,10 +126,10 @@ public:
 #if DEBUG
             else
             {
-                //std::cout << "SymbolMappedArray::operator[]: bogus key " << key << "!\n";
-                //std::cout << "    map: ";
+                std::cout << "SymbolMappedArray::operator[]: bogus key " << key << "!\n";
+                std::cout << "    map: ";
                 pMap->dump();
-                //std::cout << "\n";
+                std::cout << "\n";
             }
 #endif
         }

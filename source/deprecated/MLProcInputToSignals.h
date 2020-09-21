@@ -162,8 +162,9 @@ private:
   // the usual voices for each channel
   std::vector<MLVoice> mVoices;
   
-  std::array<MLChangeList, kMPEInputChannels> mPitchBendChangesByChannel;
-  std::array<MLSignal, kMPEInputChannels> mPitchBendSignals;
+  // add 1 to accommodate 1-based JUCE MIDI channels
+  std::array<MLChangeList, kMPEInputChannels + 1> mPitchBendChangesByChannel;
+  std::array<MLSignal, kMPEInputChannels + 1> mPitchBendSignals;
   
   // a special voice for the MPE "Main Channel"
   // stores main pitch bend and controller inputs, which are added to other voices.
@@ -203,6 +204,7 @@ private:
   MLSignal mMainMod3Signal;
   
   float mPitchWheelSemitones;
+  float mPitchWheelSemitonesMPE;
   MLScale mScale;
 	float mMasterTune {440.f};
 	float mMasterPitchOffset {0.f};
