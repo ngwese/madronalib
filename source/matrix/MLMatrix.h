@@ -568,6 +568,11 @@ class Matrix final
   {
     return reinterpret_cast<const int32_t*>(mDataAligned);
   }
+
+#if (defined __ARM_NEON) || (defined __ARM_NEON__)
+  // NEON
+#else
+  // SSE2
   __m128* asM128Ptr(void) const { return reinterpret_cast<__m128*>(mDataAligned); }
   const __m128* asConstM128Ptr(void) const { return reinterpret_cast<const __m128*>(mDataAligned); }
   __m128i* asM128IPtr(void) const { return reinterpret_cast<__m128i*>(mDataAligned); }
@@ -575,6 +580,7 @@ class Matrix final
   {
     return reinterpret_cast<const __m128i*>(mDataAligned);
   }
+#endif
 
   // helper functions
   static Matrix copyWithLoopAtEnd(const Matrix& src, int loopLength);
